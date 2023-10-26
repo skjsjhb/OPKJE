@@ -1,6 +1,6 @@
-package skjsjhb.rhytick.opfw.je.timer;
+package skjsjhb.rhytick.opfw.je.timing;
 
-import org.lwjgl.glfw.GLFW;
+import skjsjhb.rhytick.opfw.je.dce.Expose;
 
 public class Timer {
     /**
@@ -10,18 +10,16 @@ public class Timer {
 
     public Timer() {
         nanoTimeOffset = System.nanoTime();
-
     }
 
     /**
-     * Gets the time since LWJGL is initialized.
-     * <br/>
-     * Note that GLFW must be initialized when calling.
+     * Gets the approximate system time.
      *
      * @return Current time in seconds.
      */
-    public double getTime() {
-        return GLFW.glfwGetTime();
+    @Expose
+    public double getApproxTime() {
+        return System.currentTimeMillis() / 1e3;
     }
 
     /**
@@ -29,6 +27,7 @@ public class Timer {
      *
      * @return Current time in ns.
      */
+    @Expose
     public long getHighResTime() {
         return System.nanoTime() - nanoTimeOffset;
     }

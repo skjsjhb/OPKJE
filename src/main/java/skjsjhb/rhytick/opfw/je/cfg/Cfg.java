@@ -10,18 +10,6 @@ import java.util.Objects;
 
 /**
  * OPFW config provider class.
- * <br/>
- * OPFW config is basically a limited K-V map. Example as below (lines start with {@code #} are comments):
- * <br/>
- * <pre>
- * # Boolean
- * -cherry.fullscreen
- * +cherry.window_fixed
- * # Number & String
- * cherry.window_width 960
- * cherry.window_height 540
- * sys.impl_name OPKJE
- * </pre>
  */
 public class Cfg {
     protected static Map<String, String> values = new HashMap<>();

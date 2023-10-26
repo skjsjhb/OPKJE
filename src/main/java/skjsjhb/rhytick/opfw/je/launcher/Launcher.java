@@ -1,21 +1,14 @@
 package skjsjhb.rhytick.opfw.je.launcher;
 
 import skjsjhb.rhytick.opfw.je.cfg.Cfg;
-import skjsjhb.rhytick.opfw.je.cherry.Cherry;
 
 /**
  * Main entry class for the OPFW (OPKJE) support.
  * This launcher starts all services, call the main script entry and maintain all necessary envs.
  */
-public final class OPFWLauncher {
+public final class Launcher {
 
     public static void main(String[] args) {
         Cfg.loadBundledCfg();
-        Cherry.initNative();
-        Cherry cherry = new Cherry();
-        cherry.init();
-        while (true) {
-            cherry.updateEvents();
-        }
     }
 }

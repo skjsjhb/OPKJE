@@ -1,5 +1,7 @@
 package skjsjhb.rhytick.opfw.je.version;
 
+import skjsjhb.rhytick.opfw.je.dce.Expose;
+
 /**
  * Meta class declaring the version of the framework.
  */
@@ -26,7 +28,8 @@ public final class Version {
      *
      * @return Generated product info.
      */
-    public static String getProdString() {
+    @Expose
+    public String getProdString() {
         return API_NAME + " Version " + API_VER + " (" + IMPL_NAME + " " + IMPL_VER + ")";
     }
 

@@ -15,6 +15,29 @@ public class Finder {
     protected String root;
 
     /**
+     * Create file manager with root set automatically.
+     */
+    public Finder() {
+        try {
+            configureRootPath();
+        } catch (IOException e) {
+            System.err.println("Could not configure root path for Finder: " + e);
+            System.err.println("This is swallowed for now, but derived exceptions will likely to occur.");
+        }
+    }
+
+
+    /**
+     * Create file manager with root set to the specified value.
+     *
+     * @param aRoot An existing path to be used as the root directory.
+     */
+    public Finder(String aRoot) {
+        System.out.println("Using external root path: " + aRoot);
+        this.root = Paths.get(aRoot).normalize().toAbsolutePath().toString();
+    }
+
+    /**
      * Configure a usable base path.
      *
      * @throws IOException If directory operations failed.
@@ -38,29 +61,6 @@ public class Finder {
         System.out.println("Root path set to: " + root);
         Files.createDirectories(Paths.get(root));
         System.out.println("Successfully configured root path.");
-    }
-
-
-    /**
-     * Create file manager with root set automatically.
-     */
-    public Finder() {
-        try {
-            configureRootPath();
-        } catch (IOException e) {
-            System.err.println("Could not configure root path for Finder: " + e);
-            System.err.println("This is swallowed for now, but derived exceptions will likely to occur.");
-        }
-    }
-
-    /**
-     * Create file manager with root set to the specified value.
-     *
-     * @param aRoot An existing path to be used as the root directory.
-     */
-    public Finder(String aRoot) {
-        System.out.println("Using external root path: " + aRoot);
-        this.root = Paths.get(aRoot).normalize().toAbsolutePath().toString();
     }
 
     /**
@@ -106,7 +106,7 @@ public class Finder {
     public File getFile(String rel) throws IllegalAccessException {
         if (!checkPathBounds(rel)) {
             System.err.println("Malicious access to invalid path blocked. Target: " + rel);
-            throw new IllegalAccessException("Virtual target path is not allowed: " + rel);
+            throw new IllegalAccessException("invalid virtual path, accessing " + rel);
         }
         return new File(resolve(rel));
     }

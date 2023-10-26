@@ -1,98 +1,68 @@
 package skjsjhb.rhytick.opfw.je.cherry;
 
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.system.MemoryUtil;
 import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.schedule.AlwaysTask;
+import skjsjhb.rhytick.opfw.je.timing.Throttle;
 
 /**
- * Rhytick's Cherry graphics interface.
+ * Rhytick's Cherry graphics interface. Each instance owns a dedicated window and render context.
  */
-public class Cherry {
+public class Cherry extends AlwaysTask {
     /**
-     * Flag to record whether the native library is already initialized.
+     * Host window instance.
      */
-    protected static boolean nativeInitialized = false;
+    protected Window window;
 
     /**
-     * GLFW window reference.
+     * Flag field indicating whether Cherry is running.
      */
-    protected long window;
+    protected boolean running;
 
     /**
-     * Static method for initializing the underlying graphics library.
+     * FPS limit.
+     */
+    protected Throttle fpsThrottle = new Throttle();
+
+    /**
+     * Constructs the Cherry instance, create a corresponding window, and load cfg.
+     */
+    public Cherry() {
+        CherryGlobal.addInstance();
+        // Create window and mark running
+        window = new Window();
+        running = true;
+        int fps = Cfg.getInt("cherry.fps_max", 330);
+        System.out.println("FPS set to " + fps);
+        fpsThrottle.setFrequency(fps);
+    }
+
+    /**
+     * Check if this Cherry instance is running.
      *
-     * @apiNote This method must only be called once (though this method already prevents redundant calls) and must
-     * be called from the main thread only.
+     * @return Running status.
      */
-    public static void initNative() {
-        if (nativeInitialized) {
-            return;
-        }
-        GLFWErrorCallback.createPrint(System.err).set();
-        if (!GLFW.glfwInit()) {
-            throw new RuntimeException("Failed to initialize GLFW!");
-        }
+    public boolean isRunning() {
+        return running;
     }
 
     /**
-     * Initialize Cherry module.
-     * <br/>
-     * Cherry will create the default window (invisible by default), configure the OpenGL context, and get all
-     * other preparation stuff done. After this call, all Cherry APIs will become usable.
+     * Stop the current cherry instance and stop the library.
      */
-    public void init() {
-        // Configure video mode
-        long monitor = GLFW.glfwGetPrimaryMonitor();
-        GLFWVidMode vmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-        if (vmode == null) {
-            throw new RuntimeException("Could not get default video mode!");
-        }
-        int ww, wh;
-        ww = vmode.width();
-        wh = vmode.height();
-        System.out.println("Cherry video mode: " + ww + "x" + wh + "@" + vmode.refreshRate());
-
-        boolean fullscreen = Cfg.getBoolean("cherry.fullscreen");
-        String title = Cfg.getValue("cherry.window_title", "OPKJE");
-        if (fullscreen) {
-            System.out.println("Entering fullscreen mode.");
-            window = GLFW.glfwCreateWindow(ww, wh, title, monitor, MemoryUtil.NULL);
-        } else {
-            System.out.println("Entering windowed mode.");
-            double scale = Cfg.getDouble("cherry.window_scale", 0.8);
-            window = GLFW.glfwCreateWindow((int) (scale * ww), (int) (scale * wh), title,
-                    MemoryUtil.NULL, MemoryUtil.NULL);
-        }
-        if (window == MemoryUtil.NULL) {
-            throw new RuntimeException("Failed to create display context!");
-        }
-        GLFW.glfwMakeContextCurrent(window);
-        if (Cfg.getBoolean("cherry.vsync")) {
-            GLFW.glfwSwapInterval(1);
-        } else {
-            GLFW.glfwSwapInterval(0);
-        }
+    public void stop() {
+        CherryGlobal.subInstance();
+        System.out.println("Stopping Cherry!");
+        window.close();
     }
 
-    /**
-     * Flush the frame.
-     *
-     * @apiNote This does not poll events of this window.
-     */
-    public void flush() {
-        if (window != MemoryUtil.NULL) {
-            GLFW.glfwSwapBuffers(window);
+    @Override
+    public boolean run() {
+        if (running) {
+            window.flush();
+            if (window.shouldClose()) {
+                running = false;
+                stop();
+            }
         }
-    }
-
-    /**
-     * Poll all events related to the window.
-     */
-    public void updateEvents() {
-        if (window != MemoryUtil.NULL) {
-            GLFW.glfwPollEvents();
-        }
+        return running;
     }
 }

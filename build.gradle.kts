@@ -143,7 +143,7 @@ val graalVMArgs: List<String> = if (isGraalVM) {
 }
 
 application {
-    mainClass.set("skjsjhb.rhytick.opfw.je.launcher.OPFWLauncher")
+    mainClass.set("skjsjhb.rhytick.opfw.je.launcher.Launcher")
     applicationDefaultJvmArgs = jvmCommonArgs + graalVMArgs + devArgs
 }
 
