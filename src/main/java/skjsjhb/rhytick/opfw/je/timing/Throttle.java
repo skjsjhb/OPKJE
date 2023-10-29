@@ -4,9 +4,8 @@ package skjsjhb.rhytick.opfw.je.timing;
  * A throttled action which runs with limited speed.
  */
 public class Throttle {
-    protected double nspt = 0;
-
     protected long lastTimestamp = 0;
+    protected double nspt = 0;
     protected Timer timer = new Timer();
 
     /**

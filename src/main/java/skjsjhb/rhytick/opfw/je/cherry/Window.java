@@ -7,16 +7,20 @@ import org.lwjgl.opengl.GL33C;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryUtil;
 import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.timing.Throttle;
 
 /**
  * Abstract window object.
  */
 public class Window {
     /**
+     * FPS throttler.
+     */
+    protected Throttle fpsThrottle = new Throttle();
+    /**
      * Internal GLFW window instance.
      */
     protected long gWindow = MemoryUtil.NULL;
-
     /**
      * Internal {@link GLCapabilities} reference.
      */
@@ -30,19 +34,35 @@ public class Window {
     }
 
     /**
+     * Close the window, destroy the context, and free its resources.
+     */
+    public void close() {
+        GLFW.glfwDestroyWindow(gWindow);
+    }
+
+    /**
+     * Flush a new frame.
+     *
+     * @apiNote A new frame will be pushed for rendering. However, the events related to this
+     * window are not polled.
+     */
+    public void flush() {
+        GLFW.glfwSwapBuffers(gWindow);
+    }
+
+    /**
      * Internal method for initializing.
      */
     protected void init() {
         // Configure video mode
         long monitor = GLFW.glfwGetPrimaryMonitor();
-        GLFWVidMode vmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+        GLFWVidMode vmode = GLFW.glfwGetVideoMode(monitor);
         if (vmode == null) {
             throw new RuntimeException("could not get default video mode");
         }
 
-        int ww, wh;
-        ww = vmode.width();
-        wh = vmode.height();
+        int ww = vmode.width();
+        int wh = vmode.height();
         System.out.printf("Video mode: %dx%d@%d\n", ww, wh, vmode.refreshRate());
 
         // Request an OpenGL 3.3 Core profile
@@ -67,15 +87,14 @@ public class Window {
             throw new RuntimeException("failed to create window");
         }
 
-        // Configure VSYNC
         GLFW.glfwMakeContextCurrent(gWindow);
-        if (Cfg.getBoolean("cherry.vsync")) {
-            System.out.println("Enabled VSYNC.");
-            GLFW.glfwSwapInterval(1);
-        } else {
-            System.out.println("Disabled VSYNC.");
-            GLFW.glfwSwapInterval(0);
-        }
+
+        // Configure vsync & fps
+        boolean vsync = Cfg.getBoolean("cherry.vsync");
+        setVsync(vsync);
+
+        int fps = vsync ? vmode.refreshRate() : Cfg.getInt("cherry.fps_max", 330);
+        setFPSLimit(fps);
 
         // Initialize OpenGL methods
         glCapabilities = GL.createCapabilities();
@@ -86,20 +105,31 @@ public class Window {
     }
 
     /**
-     * Flush a new frame.
+     * Sets the FPS limit.
      *
-     * @apiNote A new frame will be pushed for rendering. However, the events related to this
-     * window are not polled.
+     * @param fps FPS limit.
+     * @apiNote Render requests to {@link #flush()} are not throttled by this option. Also, the generation of
+     * frames are not done by {@link Window}, use {@link #shouldGenNewFrame()} to generate frames on demand.
      */
-    public void flush() {
-        GLFW.glfwSwapBuffers(gWindow);
+    public void setFPSLimit(int fps) {
+        System.out.println("FPS limit set to " + fps);
+        fpsThrottle.setFrequency(fps);
     }
 
     /**
-     * Close the window, destroy the context, and free its resources.
+     * Enable or disable vsync.
+     *
+     * @param e {@code true} to enable vsync.
+     * @apiNote GLFW can 'suggest' the system to disable / enable vsync. However, the final decision is made
+     * by drivers / system.
      */
-    public void close() {
-        GLFW.glfwDestroyWindow(gWindow);
+    public void setVsync(boolean e) {
+        if (e) {
+            System.out.println("Enabling VSYNC.");
+        } else {
+            System.out.println("Disabling VSYNC.");
+        }
+        GLFW.glfwSwapInterval(e ? 1 : 0);
     }
 
     /**
@@ -109,5 +139,14 @@ public class Window {
      */
     public boolean shouldClose() {
         return GLFW.glfwWindowShouldClose(gWindow);
+    }
+
+    /**
+     * Check if a new frame is needed.
+     *
+     * @return {@code true} if it's suitable to generate a new frame and {@link #flush()} the window.
+     */
+    public boolean shouldGenNewFrame() {
+        return fpsThrottle.shouldRun();
     }
 }

@@ -15,21 +15,39 @@ public class Cfg {
     protected static Map<String, String> values = new HashMap<>();
 
     /**
-     * Gets the value using specified key. The default value is returned if the key is not set.
-     *
-     * @param k  Cfg key.
-     * @param dv Default value.
-     * @return Corresponding value, or {@code dv} if not exist.
+     * The overload of {@link #getBoolean(String, boolean)} with default value set to {@code false}.
      */
-    public static String getValue(String k, String dv) {
-        return Objects.requireNonNullElse(values.get(k), dv);
+    public static boolean getBoolean(String k) {
+        return getBoolean(k, false);
     }
 
     /**
-     * The overload of {@link #getInt(String, int)} with default value set to 0.
+     * Convert the result of {@link #getValue(String, String)} to {@code boolean}.
      */
-    public static int getInt(String k) {
-        return getInt(k, 0);
+    public static boolean getBoolean(String k, boolean dv) {
+        var s = getValue(k, "");
+        if (s.equals("+")) {
+            return true;
+        }
+        if (s.equals("-")) {
+            return false;
+        }
+        return dv;
+    }
+
+    /**
+     * Convert the result of {@link #getValue(String, String)} to {@code double}.
+     */
+    public static double getDouble(String k, double dv) {
+        var s = getValue(k, "");
+        if (s.isEmpty()) {
+            return dv;
+        }
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException ignored) {
+            return dv;
+        }
     }
 
     /**
@@ -40,10 +58,10 @@ public class Cfg {
     }
 
     /**
-     * The overload of {@link #getBoolean(String, boolean)} with default value set to {@code false}.
+     * The overload of {@link #getInt(String, int)} with default value set to 0.
      */
-    public static boolean getBoolean(String k) {
-        return getBoolean(k, false);
+    public static int getInt(String k) {
+        return getInt(k, 0);
     }
 
     /**
@@ -62,33 +80,14 @@ public class Cfg {
     }
 
     /**
-     * Convert the result of {@link #getValue(String, String)} to {@code double}.
+     * Gets the value using specified key. The default value is returned if the key is not set.
+     *
+     * @param k  Cfg key.
+     * @param dv Default value.
+     * @return Corresponding value, or {@code dv} if not exist.
      */
-    public static double getDouble(String k, double dv) {
-        var s = getValue(k, "");
-        if (s.isEmpty()) {
-            return dv;
-        }
-        try {
-            return Double.parseDouble(s);
-        } catch (NumberFormatException ignored) {
-            return dv;
-        }
-    }
-
-
-    /**
-     * Convert the result of {@link #getValue(String, String)} to {@code boolean}.
-     */
-    public static boolean getBoolean(String k, boolean dv) {
-        var s = getValue(k, "");
-        if (s.equals("+")) {
-            return true;
-        }
-        if (s.equals("-")) {
-            return false;
-        }
-        return dv;
+    public static String getValue(String k, String dv) {
+        return Objects.requireNonNullElse(values.get(k), dv);
     }
 
     /**

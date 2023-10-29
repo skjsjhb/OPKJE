@@ -14,17 +14,14 @@ public class Loop {
      * Tasks buffer.
      */
     protected final Queue<Task> tasks = new ConcurrentLinkedQueue<>();
-
-    /**
-     * Running flag.
-     */
-    protected boolean running = false;
-
     /**
      * The thread this loop belongs.
      */
     protected long homeThreadId;
-
+    /**
+     * Running flag.
+     */
+    protected boolean running = false;
 
     /**
      * Check if this method is called on the same thread where the loop is created.
@@ -36,41 +33,13 @@ public class Loop {
     }
 
     /**
-     * Append a task to the end of the task queue.
-     * <br/>
-     * This method can be called from any thread.
+     * Check if the loop is running.
      *
-     * @param a Task to add.
+     * @apiNote Even if this method returns {@code false}, it does not mean that the loop
+     * has stopped, nor indicating the future status of the loop.
      */
-    public void push(Task a) {
-        tasks.add(a);
-        a.setLoop(this);
-    }
-
-    /**
-     * {@link Runnable} overload of {@link #push(Task)}.
-     */
-    public void push(Runnable a) {
-        push(Task.from(a));
-    }
-
-    /**
-     * Start the loop. This method will block the thread until the loop ends.
-     */
-    public void start() {
-        homeThreadId = Thread.currentThread().threadId();
-        running = true;
-        loop();
-    }
-
-    /**
-     * Stop the loop.
-     * <br/>
-     * This method must be called on the home thread.
-     */
-    public void requestStop() {
-        checkThread();
-        running = false;
+    public boolean isRunning() {
+        return running;
     }
 
     /**
@@ -86,5 +55,48 @@ public class Loop {
                 t.execute();
             }
         }
+    }
+
+    /**
+     * Append a task to the end of the task queue.
+     * <br/>
+     * This method can be called from any thread.
+     *
+     * @param a Task to add.
+     */
+    public void push(Task a) {
+        if (isRunning()) {
+            throw new IllegalStateException("loop is stopping");
+        }
+        tasks.add(a);
+        a.setLoop(this);
+    }
+
+    /**
+     * {@link Runnable} overload of {@link #push(Task)}.
+     */
+    public void push(Runnable a) {
+        push(Task.from(a));
+    }
+
+    /**
+     * Requests the loop to stop.
+     * <br/>
+     * The {@link #running} flag will be set to {@code false} immediately. No more tasks are allowed to
+     * be added after this method. Existing tasks can still finish execution.
+     * This method must be called on the home thread.
+     */
+    public void requestStop() {
+        checkThread();
+        running = false;
+    }
+
+    /**
+     * Start the loop. This method will block the thread until the loop ends.
+     */
+    public void start() {
+        homeThreadId = Thread.currentThread().threadId();
+        running = true;
+        loop();
     }
 }

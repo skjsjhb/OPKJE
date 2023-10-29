@@ -13,15 +13,16 @@ import java.util.Map;
 /**
  * JavaScript environment with optionally OPFW bindings based on GraalVM.
  * Used for main game scripts and charts.
+ * <br/>
+ * This class internally holds a {@link Loop} to manage concepts like 'tick' in Node.js and browsers.
  */
 public class JavaScriptEnv {
-    protected Loop vmLoop = new Loop();
-
     protected Map<String, Object> moduleMap = new Hashtable<>();
     /**
      * Internal GraalVM instance.
      */
     protected Context vm;
+    protected Loop vmLoop = new Loop();
 
     /**
      * Create a new JavaScript evaluation environment.
@@ -43,35 +44,21 @@ public class JavaScriptEnv {
     }
 
     /**
+     * Get engine info as string.
+     *
+     * @return Readable info about the engine.
+     */
+    public String getEngineInfo() {
+        return "JavaScriptEnv ("
+                + vm.getEngine().getImplementationName() + ", "
+                + vm.getEngine().getVersion() + ")";
+    }
+
+    /**
      * Gets the internal loop object.
      */
     protected Loop getLoop() {
         return vmLoop;
-    }
-
-    /**
-     * Expose a public interface annotated with {@link Expose}.
-     *
-     * @param name Global identifier for the instance to bind.
-     * @param ctx  Context object to be bound.
-     * @apiNote This method might cause security issues. See {@link Expose} for details.
-     * @see Expose
-     */
-    public void setGlobal(String name, Object ctx) {
-        vm.getBindings("js").putMember(name, ctx);
-    }
-
-    /**
-     * Sets a module with indexed key.
-     * <br/>
-     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code module()} to
-     * get the module instance.
-     *
-     * @param name Module name.
-     * @param ctx  Module implementation object.
-     */
-    public void setModule(String name, Object ctx) {
-        moduleMap.put(name, ctx);
     }
 
     /**
@@ -98,14 +85,28 @@ public class JavaScriptEnv {
     }
 
     /**
-     * Get engine info as string.
+     * Expose a public interface annotated with {@link Expose}.
      *
-     * @return Readable info about the engine.
+     * @param name Global identifier for the instance to bind.
+     * @param ctx  Context object to be bound.
+     * @apiNote This method might cause security issues. See {@link Expose} for details.
+     * @see Expose
      */
-    public String getEngineInfo() {
-        return "JavaScriptEnv ("
-                + vm.getEngine().getImplementationName() + ", "
-                + vm.getEngine().getVersion() + ")";
+    public void setGlobal(String name, Object ctx) {
+        vm.getBindings("js").putMember(name, ctx);
+    }
+
+    /**
+     * Sets a module with indexed key.
+     * <br/>
+     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code module()} to
+     * get the module instance.
+     *
+     * @param name Module name.
+     * @param ctx  Module implementation object.
+     */
+    public void setModule(String name, Object ctx) {
+        moduleMap.put(name, ctx);
     }
 
     /**

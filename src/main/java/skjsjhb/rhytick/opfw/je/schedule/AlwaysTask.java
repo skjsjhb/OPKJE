@@ -4,13 +4,6 @@ package skjsjhb.rhytick.opfw.je.schedule;
  * A task implementation which optionally repeat itself after its execution.
  */
 public abstract class AlwaysTask extends Task {
-    @Override
-    void execute() {
-        if (run() && getLoop() != null && getLoop().running) {
-            getLoop().push(this);
-        }
-    }
-
     /**
      * User defined method to be called.
      * <br/>
@@ -21,5 +14,12 @@ public abstract class AlwaysTask extends Task {
      *
      * @return {@code true} if the task needs to be repeated next time.
      */
-    public abstract boolean run();
+    public abstract boolean always();
+
+    @Override
+    void execute() {
+        if (always() && getLoop() != null && getLoop().isRunning()) {
+            getLoop().push(this);
+        }
+    }
 }
