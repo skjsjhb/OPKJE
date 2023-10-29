@@ -1,9 +1,8 @@
 package skjsjhb.rhytick.opfw.je.cfg;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import skjsjhb.rhytick.opfw.je.finder.Finder;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +11,8 @@ import java.util.Objects;
  * OPFW config provider class.
  */
 public class Cfg {
+
+    protected static final String BUNDLED_CFG_NAME = "default.cfg";
     protected static Map<String, String> values = new HashMap<>();
 
     /**
@@ -80,6 +81,13 @@ public class Cfg {
     }
 
     /**
+     * Override of {@link #getValue(String, String)} with default value set to empty.
+     */
+    public static String getValue(String k) {
+        return getValue(k, "");
+    }
+
+    /**
      * Gets the value using specified key. The default value is returned if the key is not set.
      *
      * @param k  Cfg key.
@@ -120,16 +128,32 @@ public class Cfg {
     /**
      * Load the default cfg file bundled in the jar.
      */
-    public static void loadBundledCfg() {
-        System.out.println("Loading bundled cfg...");
-        try (InputStream def = Thread.currentThread().getContextClassLoader().getResourceAsStream("default.cfg")) {
+    public static void loadBundledCfg() throws IOException {
+        try (InputStream def = Thread.currentThread().getContextClassLoader().getResourceAsStream(BUNDLED_CFG_NAME)) {
             if (def != null) {
                 String[] result = new BufferedReader(new InputStreamReader(def))
                         .lines().toArray(String[]::new);
                 load(result);
             }
-        } catch (IOException e) {
-            System.out.println("Failed to load bundled cfg file: " + e);
+        }
+    }
+
+    /**
+     * Load the user defined cfg file.
+     * <br/>
+     * User cfg locates at <pre>/osr/user.cfg</pre>
+     */
+    public static void loadUserCfg() {
+        try {
+            File f = new File(Finder.resolve("/osr/user.cfg"));
+            FileInputStream usr = new FileInputStream(f);
+            String[] result = new BufferedReader(new InputStreamReader(usr))
+                    .lines().toArray(String[]::new);
+            load(result);
+        } catch (FileNotFoundException ignored) {
+            System.out.println("User cfg file does not exist. Skipped.");
+        } catch (UncheckedIOException e) {
+            System.err.println("Failed to load user cfg file: " + e);
         }
     }
 }

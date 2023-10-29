@@ -1,5 +1,7 @@
 package skjsjhb.rhytick.opfw.je.finder;
 
+import skjsjhb.rhytick.opfw.je.dce.Expose;
+
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.Hashtable;
@@ -16,14 +18,59 @@ public class KV {
     /**
      * A map which stores key to binary stream of the stored object.
      */
-    protected Map<String, String> kv = new Hashtable<>();
+    protected static Map<String, String> kv = new Hashtable<>();
+
+    /**
+     * Load kv file.
+     */
+    @SuppressWarnings("unchecked")
+    public static void load() {
+        try {
+            File f = new File(KV_FILE_LOCATION);
+            FileInputStream fis = new FileInputStream(f);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            kv = (Map<String, String>) ois.readObject();
+            ois.close();
+            System.out.println("KV data loaded.");
+        } catch (FileNotFoundException ignored) {
+            // This is not considered an error
+            System.out.println("KV file does not exist. Skipped loading.");
+        } catch (IOException e) {
+            System.err.println("Could not load KV from file: " + e);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Could not parse KV data: " + e);
+        }
+    }
+
+    /**
+     * Save kv file.
+     */
+    public static void save() {
+        try {
+            String saveTarget = "/osr/kv";
+            Finder.ensureDir(saveTarget);
+            File f = new File(saveTarget);
+            FileOutputStream fos = new FileOutputStream(f);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(kv);
+            oos.close();
+            System.out.println("KV data saved.");
+        } catch (IOException e) {
+            System.err.println("Could not save KV: " + e);
+        }
+    }
 
     /**
      * Get the object stored in KV.
      * <br/>
      * The value is loaded from the map, parsed and then returned as an object. If failed, it will return null.
+     * <br/>
+     * TS signature:
+     * <pre>get(k:string):any;</pre>
      */
     @Nullable
+    @Expose
+    @SuppressWarnings("unused")
     public Object get(String k) {
         if (!kv.containsKey(k)) {
             return null;
@@ -39,43 +86,6 @@ public class KV {
             System.err.println("Corresponding class not found: " + e);
         }
         return null;
-    }
-
-    /**
-     * Load kv file.
-     */
-    @SuppressWarnings("unchecked")
-    public void load() {
-        try {
-            File f = new File(KV_FILE_LOCATION);
-            FileInputStream fis = new FileInputStream(f);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            kv = (Map<String, String>) ois.readObject();
-            ois.close();
-            System.out.println("KV data loaded.");
-        } catch (IOException e) {
-            System.err.println("Could not load KV from file: " + e);
-        } catch (ClassNotFoundException e) {
-            System.err.println("Could not parse KV data: " + e);
-        }
-    }
-
-    /**
-     * Save kv file.
-     */
-    public void save() {
-        try {
-            String saveTarget = "/osr/kv";
-            Finder.ensureDir(saveTarget);
-            File f = new File(saveTarget);
-            FileOutputStream fos = new FileOutputStream(f);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(kv);
-            oos.close();
-            System.out.println("KV data saved.");
-        } catch (IOException e) {
-            System.err.println("Could not save KV: " + e);
-        }
     }
 
     /**

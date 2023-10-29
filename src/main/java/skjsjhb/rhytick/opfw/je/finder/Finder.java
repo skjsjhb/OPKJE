@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 /**
  * Storage path provider.
@@ -15,7 +18,8 @@ public class Finder {
     protected static String root = "";
 
     /**
-     * Checks if the requested path is a subdirectory of the configured root.
+     * Checks if the requested path is a subdirectory of the configured root. If the check fails, an exception is
+     * thrown.
      * <br/>
      * Malicious code might utilize relative path functionality to write file to arbitrary place
      * on the client system. This function prevents this (partially) by analyzing the paths and
@@ -23,15 +27,13 @@ public class Finder {
      * special mechanisms inside the root from being accessed.
      *
      * @param target Relative path for checking.
-     * @return {@code true} if this path can be accessed safely.
      */
-    public static boolean checkPathBounds(String target) {
+    public static void checkPathBounds(String target) {
         checkRoot();
         boolean pass = Paths.get(root, target).normalize().toAbsolutePath().startsWith(Paths.get(root));
         if (!pass) {
-            System.out.println("Warning: Invalid access to virtual path " + target);
+            throw new IllegalArgumentException("vfs path out of bounds: " + target);
         }
-        return pass;
     }
 
     /**
@@ -46,12 +48,12 @@ public class Finder {
     /**
      * Configure the root path.
      */
-    public static void configure() {
+    public static void configure() throws IOException {
+        System.out.println("Configuring Finder paths.");
         try {
             configureRootPath();
         } catch (IOException e) {
-            System.err.println("Could not configure root path for Finder: " + e);
-            System.err.println("This is swallowed for now, but derived exceptions will likely to occur.");
+            throw new IOException("could not configure root path", e);
         }
     }
 
@@ -85,21 +87,51 @@ public class Finder {
      * Create specified directory on demand.
      *
      * @param path Relative path. Its <b>parent</b> will be checked and created.
+     * @throws IOException If the directory could not be created.
      */
-    public static void ensureDir(String path) {
+    public static void ensureDir(String path) throws IOException {
         checkRoot();
         checkPathBounds(path);
         Path target = Paths.get(resolve(path)).getParent();
         if (Files.exists(target) && Files.isDirectory(target)) {
             return;
         }
-        // If the target directory exists but is not a directory, this operation will fail silently (the exception
-        // is swallowed for now).
-        try {
-            Files.createDirectories(target);
-        } catch (IOException e) {
-            System.err.printf("Failed to create directory (%s). This may trigger subsequent exceptions later.\n", path);
+        Files.createDirectories(target);
+    }
+
+    /**
+     * Overload of {@link #readFileBytes(String, boolean)} without validation.
+     */
+    public static byte[] readFileBytes(String pt) throws IOException {
+        return readFileBytes(pt, false);
+    }
+
+    /**
+     * Read all bytes of a file. Optinally verify its integrity.
+     *
+     * @param pt Relative path of the file.
+     * @return The content of the file.
+     * @throws IOException If the file cannot be read, or the integrity check failed. The error
+     *                     message will indicate the cause.
+     * @apiNote The file must be encoded using UTF-8.
+     */
+    public static byte[] readFileBytes(String pt, boolean validate) throws IOException {
+        String apt = resolve(pt);
+        checkPathBounds(pt);
+        byte[] content = Files.readAllBytes(Paths.get(apt));
+        if (validate) {
+            String sig = apt + ".sig";
+            boolean verified;
+            try {
+                verified = verifyIntegrity(content, Files.readString(Paths.get(sig)));
+            } catch (IOException e) {
+                throw new IOException("could not read integrity file", e);
+            }
+            if (!verified) {
+                throw new IOException("integrity check failed");
+            }
         }
+        return content;
     }
 
     /**
@@ -115,5 +147,19 @@ public class Finder {
         return Paths.get(root, rel).normalize().toString();
     }
 
-
+    /**
+     * Validate the integrity of the spcified file against provided hash.
+     *
+     * @return {@code true} If the hash matches.
+     */
+    public static boolean verifyIntegrity(byte[] source, String hash) {
+        // Use SHA-256 to hash the source
+        try {
+            byte[] hashSource = MessageDigest.getInstance("SHA-256").digest(source);
+            return Arrays.equals(hashSource, hash.getBytes());
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("Could not verify file using SHA-256, algorithm is missing.");
+            return false;
+        }
+    }
 }
