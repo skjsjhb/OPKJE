@@ -26,11 +26,12 @@ public final class Reporter {
                                                 
                         %s
 
-                        This error is displayed, as its severity is worth reporting.
+                        You're seeing this prompt as we need to raise your attention.
                         Consider reporting it to Team Rhytick for future fixes.
                         We apologize for the incovenience.
                                                 
-                        Continue and view detailed stacktrace? (Click 'Yes')
+                        Click 'Yes' for detailed stacktrace.
+                        Click 'No' to close this window.
                         """, what.toString(), explain),
                 "OPKJE Error",
                 JOptionPane.YES_NO_OPTION,
