@@ -10,8 +10,8 @@ group = "skjsjhb.rhytick.opfw"
 version = "1.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_20
+    targetCompatibility = JavaVersion.VERSION_20
 }
 
 val graalVMVersion = "23.1.0"

@@ -129,6 +129,7 @@ public class Cfg {
      * Load the default cfg file bundled in the jar.
      */
     public static void loadBundledCfg() throws IOException {
+        System.out.println("Loading bundled cfg.");
         try (InputStream def = Thread.currentThread().getContextClassLoader().getResourceAsStream(BUNDLED_CFG_NAME)) {
             if (def != null) {
                 String[] result = new BufferedReader(new InputStreamReader(def))
@@ -145,6 +146,7 @@ public class Cfg {
      */
     public static void loadUserCfg() {
         try {
+            System.out.println("Loading user cfg.");
             File f = new File(Finder.resolve("/osr/user.cfg"));
             FileInputStream usr = new FileInputStream(f);
             String[] result = new BufferedReader(new InputStreamReader(usr))

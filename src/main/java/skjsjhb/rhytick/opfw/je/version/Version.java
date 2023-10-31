@@ -1,5 +1,6 @@
 package skjsjhb.rhytick.opfw.je.version;
 
+import skjsjhb.rhytick.opfw.je.cfg.Cfg;
 import skjsjhb.rhytick.opfw.je.dce.Expose;
 
 /**
@@ -7,21 +8,14 @@ import skjsjhb.rhytick.opfw.je.dce.Expose;
  */
 public final class Version {
     /**
-     * API spec name.
+     * Gets the API version.
+     *
+     * @return The latest OPFW API version this implementation supports.
+     * @apiNote APIs are not guaranteed to
      */
-    public static final String API_NAME = "OPFW Series";
-    /**
-     * API spec version in number.
-     */
-    public static final int API_VER = 1;
-    /**
-     * Implementation project name.
-     */
-    public static final String IMPL_NAME = "OPKJE";
-    /**
-     * Implementation version in string.
-     */
-    public static final String IMPL_VER = "1.0 \"Cruiser\"";
+    public int getAPIVersion() {
+        return Cfg.getInt("version.api_ver");
+    }
 
     /**
      * Get the product info string.
@@ -30,7 +24,10 @@ public final class Version {
      */
     @Expose
     public String getProdString() {
-        return API_NAME + " Version " + API_VER + " (" + IMPL_NAME + " " + IMPL_VER + ")";
+        return Cfg.getValue("version.api_name") + " Version " +
+                Cfg.getValue("version.api_ver") + " (" +
+                Cfg.getValue("version.impl_name") + " " +
+                Cfg.getValue("version.impl_ver") + ")";
     }
 
 
