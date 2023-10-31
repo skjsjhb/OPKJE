@@ -1,5 +1,7 @@
 package skjsjhb.rhytick.opfw.je.launcher;
 
+import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+
 import javax.swing.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -16,6 +18,11 @@ public final class Reporter {
      * @param explain A brief message to explain the consequences of this error.
      */
     public static void reportError(Throwable what, String explain) {
+        if (Cfg.getBoolean("reporter.no_gui", false)) {
+            System.err.println(what.toString());
+            System.err.println("Consequences as below: \n" + explain);
+            return;
+        }
         var option = JOptionPane.showConfirmDialog(null,
                 String.format("""
                         Error detected:
@@ -58,7 +65,7 @@ public final class Reporter {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
-                reportErrorAsync(what, explain);
+                reportError(what, explain);
                 return null;
             }
         }.execute();
