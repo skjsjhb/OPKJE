@@ -1,9 +1,11 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
+import com.google.common.reflect.ClassPath;
 import skjsjhb.rhytick.opfw.je.cfg.Cfg;
 import skjsjhb.rhytick.opfw.je.finder.Finder;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Refers to the Opticia main script.
@@ -42,11 +44,50 @@ public class Emulation {
     }
 
     /**
+     * Register native interfaces using reflection.
+     * <br/>
+     * All public classes annotated with
+     */
+    protected void registerNatives() {
+        try {
+            var classInfos = ClassPath
+                    .from(getClass().getClassLoader())
+                    .getTopLevelClassesRecursive("skjsjhb.rhytick.opfw.je");
+
+            for (var cls : classInfos) {
+                var clazz = cls.load();
+                if (!clazz.isAnnotationPresent(DCEModule.class)) {
+                    continue; // Not the desired class
+                }
+                try {
+                    var cons = clazz.getConstructor();
+                    DCEModule m = clazz.getAnnotation(DCEModule.class);
+                    String name = m.value();
+                    Object inst = cons.newInstance();
+                    if (m.asGlobal()) {
+                        jsEnv.setGlobal(name, inst);
+                    } else {
+                        jsEnv.setModule(name, inst);
+                    }
+                    System.out.println("Emulation native interface registered: " + cls.getName());
+                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                         InvocationTargetException e) {
+                    System.err.println("Could not instantiate " + cls.getName() + ": " + e);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Could not enumerate classes: " + e);
+        }
+    }
+
+    /**
      * Start the emulation thread.
      * <br/>
      * This method blocks and return when requested or the VM stops.
      */
     public void start() {
+        // Enable natives
+        registerNatives();
         // Load necessary scripts
         System.out.println("Loading scripts.");
         String entry = Cfg.getValue("emulation.entry", "main");

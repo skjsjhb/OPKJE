@@ -120,6 +120,7 @@ public class JavaScriptEnv {
 
     /**
      * DCE interface for guest script to schedule tasks.
+     * This interface is special and is registered internally, without using auto registration.
      */
     public static class VMAPI {
         protected JavaScriptEnv env;

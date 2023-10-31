@@ -1,7 +1,5 @@
 package skjsjhb.rhytick.opfw.je.finder;
 
-import skjsjhb.rhytick.opfw.je.dce.Expose;
-
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.Hashtable;
@@ -19,6 +17,30 @@ public class KV {
      * A map which stores key to binary stream of the stored object.
      */
     protected static Map<String, String> kv = new Hashtable<>();
+
+    /**
+     * Get the object stored in KV.
+     * <br/>
+     * The value is loaded from the map, parsed and then returned as an object. If failed, it will return null.
+     */
+    @Nullable
+    @SuppressWarnings("unused")
+    public static Object get(String k) {
+        if (!kv.containsKey(k)) {
+            return null;
+        }
+        try {
+            String src = kv.get(k);
+            ByteArrayInputStream bi = new ByteArrayInputStream(src.getBytes());
+            ObjectInputStream oi = new ObjectInputStream(bi);
+            return oi.readObject();
+        } catch (IOException e) {
+            System.err.println("Could not read object: " + e);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Corresponding class not found: " + e);
+        }
+        return null;
+    }
 
     /**
      * Load kv file.
@@ -61,37 +83,9 @@ public class KV {
     }
 
     /**
-     * Get the object stored in KV.
-     * <br/>
-     * The value is loaded from the map, parsed and then returned as an object. If failed, it will return null.
-     * <br/>
-     * TS signature:
-     * <pre>get(k:string):any;</pre>
-     */
-    @Nullable
-    @Expose
-    @SuppressWarnings("unused")
-    public Object get(String k) {
-        if (!kv.containsKey(k)) {
-            return null;
-        }
-        try {
-            String src = kv.get(k);
-            ByteArrayInputStream bi = new ByteArrayInputStream(src.getBytes());
-            ObjectInputStream oi = new ObjectInputStream(bi);
-            return oi.readObject();
-        } catch (IOException e) {
-            System.err.println("Could not read object: " + e);
-        } catch (ClassNotFoundException e) {
-            System.err.println("Corresponding class not found: " + e);
-        }
-        return null;
-    }
-
-    /**
      * Set an object in this KV.
      */
-    public void set(String k, Object v) {
+    public static void set(String k, Object v) {
         try {
             ByteArrayOutputStream ba = new ByteArrayOutputStream();
             ObjectOutputStream objOutput = new ObjectOutputStream(ba);

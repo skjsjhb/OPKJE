@@ -114,6 +114,9 @@ dependencies {
     // Dev
     implementation("com.google.code.findbugs", "jsr305", "3.0.0")
 
+    // Reflection
+    implementation("com.google.guava", "guava", "32.1.3-jre")
+
     // Tests
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
