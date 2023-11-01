@@ -14,10 +14,12 @@ public class Loop {
      * Tasks buffer.
      */
     protected final Queue<Task> tasks = new ConcurrentLinkedQueue<>();
+
     /**
      * The thread this loop belongs.
      */
     protected long homeThreadId;
+
     /**
      * Running flag.
      */

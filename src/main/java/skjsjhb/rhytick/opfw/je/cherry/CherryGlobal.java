@@ -12,7 +12,9 @@ import skjsjhb.rhytick.opfw.je.schedule.ServiceTask;
 public class CherryGlobal extends ServiceTask {
 
     protected static boolean glfwInitialized = false;
+
     protected static int instanceCount = 0;
+
     protected static int irqMax, pscInterval;
 
     public static void addInstance() {

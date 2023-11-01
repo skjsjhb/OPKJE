@@ -5,7 +5,9 @@ package skjsjhb.rhytick.opfw.je.timing;
  */
 public class Throttle {
     protected long lastTimestamp = 0;
+
     protected double nspt = 0;
+
     protected Timer timer = new Timer();
 
     /**

@@ -17,10 +17,12 @@ public class Window {
      * FPS throttler.
      */
     protected Throttle fpsThrottle = new Throttle();
+
     /**
      * Internal GLFW window instance.
      */
     protected long gWindow = MemoryUtil.NULL;
+
     /**
      * Internal {@link GLCapabilities} reference.
      */

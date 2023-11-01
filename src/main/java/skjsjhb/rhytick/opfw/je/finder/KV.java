@@ -13,6 +13,7 @@ public class KV {
      * The location of KV data file.
      */
     protected static String KV_FILE_LOCATION = "/osr/kv";
+
     /**
      * A map which stores key to binary stream of the stored object.
      */
@@ -48,7 +49,7 @@ public class KV {
     @SuppressWarnings("unchecked")
     public static void load() {
         try {
-            File f = new File(KV_FILE_LOCATION);
+            File f = new File(Finder.resolve(KV_FILE_LOCATION));
             FileInputStream fis = new FileInputStream(f);
             ObjectInputStream ois = new ObjectInputStream(fis);
             kv = (Map<String, String>) ois.readObject();
@@ -69,9 +70,8 @@ public class KV {
      */
     public static void save() {
         try {
-            String saveTarget = "/osr/kv";
-            Finder.ensureDir(saveTarget);
-            File f = new File(saveTarget);
+            Finder.ensureDir(KV_FILE_LOCATION);
+            File f = new File(Finder.resolve(KV_FILE_LOCATION));
             FileOutputStream fos = new FileOutputStream(f);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(kv);

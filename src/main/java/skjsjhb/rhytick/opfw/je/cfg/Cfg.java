@@ -13,6 +13,7 @@ import java.util.Objects;
 public class Cfg {
 
     protected static final String BUNDLED_CFG_NAME = "default.cfg";
+
     protected static Map<String, String> values = new HashMap<>();
 
     /**

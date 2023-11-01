@@ -10,6 +10,7 @@ public class Cherry extends ServiceTask {
      * Flag field indicating whether Cherry is running.
      */
     protected boolean running;
+
     /**
      * Host window instance.
      */

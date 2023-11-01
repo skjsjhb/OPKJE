@@ -20,7 +20,11 @@ public final class Reporter {
     public static void reportError(Throwable what, String explain) {
         if (Cfg.getBoolean("reporter.no_gui", false)) {
             System.err.println(what.toString());
-            System.err.println("Consequences as below: \n" + explain);
+            System.err.println("Consequences as below:");
+            System.err.println(explain);
+            System.err.println("Stacktrace as below:");
+            //noinspection CallToPrintStackTrace
+            what.printStackTrace();
             return;
         }
         var option = JOptionPane.showConfirmDialog(null,

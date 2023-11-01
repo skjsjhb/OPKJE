@@ -4,9 +4,13 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.finder.Finder;
 import skjsjhb.rhytick.opfw.je.schedule.Loop;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -17,11 +21,21 @@ import java.util.Map;
  * This class internally holds a {@link Loop} to manage concepts like 'tick' in Node.js and browsers.
  */
 public class JavaScriptEnv {
+    /**
+     * Internal field for loading bundled script.
+     */
+    protected static final String BUNDLED_SCRIPT_NAME = "preload.js";
+
+    /**
+     * Internal field to cache all registered modules.
+     */
     protected Map<String, Object> moduleMap = new Hashtable<>();
+
     /**
      * Internal GraalVM instance.
      */
     protected Context vm;
+
     protected Loop vmLoop = new Loop();
 
     /**
@@ -69,6 +83,50 @@ public class JavaScriptEnv {
     }
 
     /**
+     * Load a bundled script.
+     * <br/>
+     * Integrity check is skipped for bundled script, since integrity checking for the jar file is enabled by default.
+     *
+     * @throws IOException If the script stream cannot be read.
+     */
+    protected void loadBundledScript() throws IOException {
+        try (InputStream ist = Thread.currentThread().getContextClassLoader().getResourceAsStream(BUNDLED_SCRIPT_NAME)) {
+            if (ist != null) {
+                byte[] source = ist.readAllBytes();
+                if (source.length == 0) {
+                    throw new IOException("empty script source");
+                }
+                pushScript(new String(source));
+            } else {
+                throw new IOException("null resource stream");
+            }
+        }
+    }
+
+    /**
+     * Load a script from file and push it into the vm script queue.
+     *
+     * @param name Script name.
+     * @throws IOException If the script file could not be read, or the integrity check failed.
+     */
+    protected void loadScriptAsync(String name) throws IOException {
+        pushScript(readScriptSource(name));
+    }
+
+    /**
+     * Load a script from file and execute it immediately, regardless of the loop status.
+     * <br/>
+     * This method is blocking and the script being loaded, unless absolutely necessary, should consider
+     * {@link #loadScriptAsync(String)} instead.
+     *
+     * @param name Script name.
+     * @throws IOException If the script file could not be read, or the integrity check failed.
+     */
+    protected void loadScriptImmediate(String name) throws IOException {
+        vm.eval(Source.create("js", readScriptSource(name)));
+    }
+
+    /**
      * Push a script to be evaluated on the end of current loop.
      * <br/>
      * This method can be called from any thread, but only after the vm starts.
@@ -82,6 +140,30 @@ public class JavaScriptEnv {
             throw new IllegalStateException("pushing script before vm loop starts");
         }
         vmLoop.push(() -> vm.eval(Source.create("js", src)));
+    }
+
+    /**
+     * Reads a script source from file.
+     * <br/>
+     * Scripts of specific name can be found at <pre>/opt/(name).js</pre>. The script file is read, and verified
+     * together with <pre>(name).js.sig</pre>. The signature might be optional for other files, but for scripts,
+     * they are necessary, unless flag <pre>emulation.no_script_verify</pre> is set, which is for dev purpose only.
+     *
+     * @param name Script virtual path.
+     * @return The source code of the script.
+     * @throws IOException If I/O errors occurred.
+     */
+    protected String readScriptSource(String name) throws IOException {
+        boolean noVerify = Cfg.getBoolean("emulation.no_script_verify", false);
+        if (noVerify) {
+            System.out.println("Script integrity check has been disabled. The usage of this flag should be limited within" +
+                    " development only.");
+        }
+        byte[] buf = Finder.readFileBytes(name, !noVerify);
+        if (buf.length == 0) {
+            throw new IOException("empty script source");
+        }
+        return new String(buf);
     }
 
     /**
@@ -127,6 +209,26 @@ public class JavaScriptEnv {
 
         public VMAPI(JavaScriptEnv e) {
             env = e;
+        }
+
+        /**
+         * Request a library to be loaded from file and executued in the environment immediately.
+         * <br/>
+         * If the verification flag ({@code emulation.no_script_verify}) is not set, then the target script will
+         * be verified for security reasons. The guest script cannot skip it.
+         *
+         * @param name Path to the library file. The file is read using {@link Finder},
+         *             so make sure to get paths right.
+         */
+        @Expose
+        @SuppressWarnings("unused")
+        public void library(String name) {
+            try {
+                System.out.println("Guest requesting library: " + name);
+                env.loadScriptImmediate(name);
+            } catch (IOException e) {
+                System.err.printf("Failed to load library '%s': %s\n", name, e);
+            }
         }
 
         /**

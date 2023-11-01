@@ -6,16 +6,29 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 /**
  * Storage path provider.
  */
 public class Finder {
+    protected static final String SIG_ALGO = "SHA-256";
+
+    protected static final String SIG_EXT = ".sig";
+
     /**
      * OPFW base path
      */
     protected static String root = "";
+
+    /**
+     * Internal method for encoding byte to hex.
+     */
+    protected static String byteToHex(byte num) {
+        char[] hexDigits = new char[2];
+        hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
+        hexDigits[1] = Character.forDigit((num & 0xF), 16);
+        return new String(hexDigits);
+    }
 
     /**
      * Checks if the requested path is a subdirectory of the configured root. If the check fails, an exception is
@@ -84,6 +97,17 @@ public class Finder {
     }
 
     /**
+     * Internal method for encoding byte to hex.
+     */
+    protected static String encodeHexString(byte[] byteArray) {
+        StringBuilder hexStringBuffer = new StringBuilder();
+        for (byte b : byteArray) {
+            hexStringBuffer.append(byteToHex(b));
+        }
+        return hexStringBuffer.toString();
+    }
+
+    /**
      * Create specified directory on demand.
      *
      * @param path Relative path. Its <b>parent</b> will be checked and created.
@@ -108,6 +132,8 @@ public class Finder {
 
     /**
      * Read all bytes of a file. Optinally verify its integrity.
+     * <br/>
+     * The specified path is checked before the file is read.
      *
      * @param pt Relative path of the file.
      * @return The content of the file.
@@ -120,10 +146,10 @@ public class Finder {
         checkPathBounds(pt);
         byte[] content = Files.readAllBytes(Paths.get(apt));
         if (validate) {
-            String sig = apt + ".sig";
+            String sig = apt + SIG_EXT;
             boolean verified;
             try {
-                verified = verifyIntegrity(content, Files.readString(Paths.get(sig)));
+                verified = verifyIntegrity(content, Files.readString(Paths.get(sig)).trim());
             } catch (IOException e) {
                 throw new IOException("could not read integrity file", e);
             }
@@ -153,12 +179,11 @@ public class Finder {
      * @return {@code true} If the hash matches.
      */
     public static boolean verifyIntegrity(byte[] source, String hash) {
-        // Use SHA-256 to hash the source
         try {
-            byte[] hashSource = MessageDigest.getInstance("SHA-256").digest(source);
-            return Arrays.equals(hashSource, hash.getBytes());
+            byte[] hashSource = MessageDigest.getInstance(SIG_ALGO).digest(source);
+            return encodeHexString(hashSource).equalsIgnoreCase(hash);
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("Could not verify file using SHA-256, algorithm is missing.");
+            System.err.printf("Could not verify file using %s, algorithm is missing.\n", SIG_ALGO);
             return false;
         }
     }
