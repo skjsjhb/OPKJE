@@ -20,7 +20,7 @@ OPKJE, stands for 'J Edition of OPK', uses LWJGL (and the JSE platform) to imple
 designed to cover the missing platform support for macOS, and has eventually became the cross platform solution for
 Opticia on PC platforms.
 
-## Build From Source
+## Build from Source
 
 ### TL; DR
 
