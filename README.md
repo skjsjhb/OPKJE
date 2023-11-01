@@ -66,8 +66,6 @@ chmod +x ./gradlew
 
 ## License
 
-Copyright (C) 2023 Ted "skjsjhb" Gao. All rights reserved.
+Copyright (C) 2023 Ted "skjsjhb" Gao.
 
-The code in this repository is currently proprietary. However, **we are't meant to make Opticia a proprietary game**.
-Since the game is still in an early stage, we have no choice but to limit the usages of our source code to avoid
-possible risks. We'll reconsider the license when the game releases.
+This repository is licensed under GPL-3.0 or any later version applicable. See `COPYING` for details.
