@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL33C;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryUtil;
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 import skjsjhb.rhytick.opfw.je.timing.Throttle;
 
 /**

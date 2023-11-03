@@ -1,4 +1,4 @@
-package skjsjhb.rhytick.opfw.je.cfg;
+package skjsjhb.rhytick.opfw.je.launcher;
 
 import skjsjhb.rhytick.opfw.je.finder.Finder;
 

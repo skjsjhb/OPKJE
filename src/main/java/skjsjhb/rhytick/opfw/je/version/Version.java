@@ -1,8 +1,8 @@
 package skjsjhb.rhytick.opfw.je.version;
 
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
 import skjsjhb.rhytick.opfw.je.dce.DCEModule;
 import skjsjhb.rhytick.opfw.je.dce.Expose;
+import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 
 /**
  * Meta class declaring the version of the framework.
@@ -13,7 +13,6 @@ public final class Version {
      * Gets the API version.
      *
      * @return The latest OPFW API version this implementation supports.
-     * @apiNote APIs are not guaranteed to
      */
     @Expose
     public static int getAPIVersion() {

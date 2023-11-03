@@ -1,7 +1,5 @@
 package skjsjhb.rhytick.opfw.je.launcher;
 
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
-
 import javax.swing.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;

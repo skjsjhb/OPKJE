@@ -4,8 +4,8 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
 import skjsjhb.rhytick.opfw.je.finder.Finder;
+import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 import skjsjhb.rhytick.opfw.je.schedule.Loop;
 
 import javax.annotation.Nullable;

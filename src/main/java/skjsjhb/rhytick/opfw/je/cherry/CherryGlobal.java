@@ -3,7 +3,7 @@ package skjsjhb.rhytick.opfw.je.cherry;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 import skjsjhb.rhytick.opfw.je.schedule.ServiceTask;
 
 /**

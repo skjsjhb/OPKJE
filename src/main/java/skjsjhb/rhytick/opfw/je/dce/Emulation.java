@@ -1,7 +1,7 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
 import com.google.common.reflect.ClassPath;
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
+import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

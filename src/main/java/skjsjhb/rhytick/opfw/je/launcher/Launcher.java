@@ -1,6 +1,5 @@
 package skjsjhb.rhytick.opfw.je.launcher;
 
-import skjsjhb.rhytick.opfw.je.cfg.Cfg;
 import skjsjhb.rhytick.opfw.je.dce.Emulation;
 import skjsjhb.rhytick.opfw.je.finder.Finder;
 import skjsjhb.rhytick.opfw.je.finder.KV;

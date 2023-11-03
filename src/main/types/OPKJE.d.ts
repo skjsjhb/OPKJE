@@ -11,15 +11,14 @@
  */
 type KnownRequireTypeMap<T> =
     T extends "version" ? Version :
-        T extends "cfg" ? Cfg :
-            T extends "kv" ? KV :
-                T extends "timer" ? TimerFactory :
-                    T extends "finder" ? Finder :
-                        T extends "transformer" ? Transformer :
-                            T extends "util" ? Util :
-                                never;
+        T extends "kv" ? KV :
+            T extends "timer" ? TimerFactory :
+                T extends "finder" ? Finder :
+                    T extends "transformer" ? Transformer :
+                        T extends "util" ? Util :
+                            never;
 
-type KnownRequireNames = "version" | "cfg" | "kv" | "timer" | "finder" | "transformer" | "util";
+type KnownRequireNames = "version" | "kv" | "timer" | "finder" | "transformer" | "util";
 
 declare interface VM {
     getVMInfo(): string;
@@ -37,24 +36,6 @@ declare interface Version {
     getAPIVersion(): number;
 
     getProdString(): string;
-}
-
-declare interface Cfg {
-    getBoolean(k: string, dv: boolean): boolean;
-
-    getBoolean(k: string): boolean;
-
-    getDouble(k: string, dv: number): number;
-
-    getDouble(k: string): number;
-
-    getInt(k: string, dv: number): number;
-
-    getInt(k: string): number;
-
-    getValue(k: string, dv: string): string;
-
-    getValue(k: string): string;
 }
 
 declare interface KV {
