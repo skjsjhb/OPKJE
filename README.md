@@ -2,6 +2,8 @@
 
 The Java Edition of the Rhytick OPK engine.
 
+![.](https://repository-images.githubusercontent.com/709884028/0c2858fd-187c-46b2-bd0c-5907c4cfcaee)
+
 ![.](https://github.com/skjsjhb/OPKJE/actions/workflows/gradle.yml/badge.svg)
 ![.](https://github.com/skjsjhb/OPKJE/actions/workflows/codeql.yml/badge.svg)
 
