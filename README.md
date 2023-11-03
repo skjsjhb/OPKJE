@@ -5,7 +5,7 @@ The Java Edition of the Rhytick OPK engine.
 ![.](https://github.com/skjsjhb/OPKJE/actions/workflows/gradle.yml/badge.svg)
 ![.](https://github.com/skjsjhb/OPKJE/actions/workflows/codeql.yml/badge.svg)
 
-## WIP
+## WIP & Disclaimer
 
 This project is still being actively maintained. Submitted commits might not be accurate, and the feature is not
 complete. The documents may also be outdated. Any major or minor changes may take place in any future, without further
