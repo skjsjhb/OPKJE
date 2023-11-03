@@ -1,16 +1,24 @@
-console.log("[OPKJE Preload Compatibility Layer Started]");
+console.log("[OPKJE Preload Compatibility Layer]");
 
 (() => {
-    // Sys
+    console.log("Deploying OPFW modules.");
+
     const version = VM.require("version");
+    const ikv = VM.require("kv");
+    const finder = VM.require("finder");
+    const util = VM.require("util");
+
+    // Sys
     globalThis.Sys = {
         about: () => {
             return `${version.getProdString()}, ${VM.getVMInfo()}`
+        },
+        stop: () => {
+            VM.stop();
         }
     };
 
     // KV
-    const ikv = VM.require("kv");
     globalThis.KV = {
         set: (k, v) => {
             ikv.set(k, JSON.stringify(v));
@@ -22,9 +30,6 @@ console.log("[OPKJE Preload Compatibility Layer Started]");
     }
 
     // Finder
-    const finder = VM.require("finder");
-    const util = VM.require("util");
-
     globalThis.Finder = {
         readFile: (pt) => {
             return new Uint8Array(util.toArray(finder.readFile(pt)));
@@ -43,5 +48,3 @@ console.log("[OPKJE Preload Compatibility Layer Started]");
         }
     };
 })();
-
-console.log(Sys.about());
