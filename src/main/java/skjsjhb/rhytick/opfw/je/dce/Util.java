@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
  * Utilities implementing missing methods in script platform.
  */
 @DCEModule(value = "util", statik = true)
+@SuppressWarnings("unused")
 public class Util {
     /**
      * Decode {@code byte[]} to {@link String}.
@@ -43,11 +44,30 @@ public class Util {
     @SuppressWarnings("unused")
     public static ProxyArray toArray(Object array) {
         if (!array.getClass().isArray()) {
-            throw new UnsupportedOperationException("not an array");
+            // Create no-op array
+            return new ProxyArray() {
+                @Override
+                public Object get(long index) {
+                    return null;
+                }
+
+                @Override
+                public long getSize() {
+                    return 0;
+                }
+
+                @Override
+                public void set(long index, Value value) {
+                }
+            };
         }
+        // Impl an array
         return new ProxyArray() {
             @Override
             public Object get(long index) {
+                if (index >= Array.getLength(array)) {
+                    return null; // No value is returned
+                }
                 return Array.get(array, (int) index);
             }
 
@@ -58,6 +78,9 @@ public class Util {
 
             @Override
             public void set(long index, Value value) {
+                if (index >= Array.getLength(array)) {
+                    return; // Fail silently
+                }
                 Array.set(array, (int) index, value.asHostObject());
             }
         };
