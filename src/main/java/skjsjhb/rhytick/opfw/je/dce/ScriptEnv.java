@@ -87,8 +87,7 @@ public class ScriptEnv {
     public String getEngineInfo() {
         return "ScriptEnv ("
                 + vm.getEngine().getImplementationName() + ", "
-                + vm.getEngine().getVersion() + ", "
-                + vm.getEngine().getLanguages() + ")";
+                + vm.getEngine().getVersion() + ")";
     }
 
     /**
@@ -146,7 +145,7 @@ public class ScriptEnv {
      * @throws IOException If the script file could not be read, or the integrity check failed.
      */
     protected void loadScriptImmediate(String name) throws IOException {
-        vm.eval(Source.create("js", readScriptSource(name))); // TODO
+        vm.eval(Source.create("js", readScriptSource(name)));
     }
 
     /**

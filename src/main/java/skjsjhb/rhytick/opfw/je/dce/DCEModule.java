@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 public @interface DCEModule {
     /**
-     * If set to {@code true}, the annotated class is registered using {@link ScriptEnv#setGlobal(String, Object)},
+     * If set to {@code true}, the annotated class is registered using {@link ScriptEnv#setGlobal(String, Object, boolean)},
      * rather than as a module.
      * <br/>
      * To avoid possible global variable pollution, this should be used with limitations and care.
@@ -30,6 +30,9 @@ public @interface DCEModule {
 
     /**
      * If set to {@code true}, the <b>class</b> of the annotated class is registered, rather than an instance.
+     * <br/>
+     * If the class is bound as a static context, it won't be instantiated, thus the member methods can't be
+     * accessed.
      * <br/>
      * The word {@code statik} is not a typo.
      */

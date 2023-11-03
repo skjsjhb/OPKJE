@@ -16,9 +16,10 @@ type KnownRequireTypeMap<T> =
                 T extends "timer" ? TimerFactory :
                     T extends "finder" ? Finder :
                         T extends "transformer" ? Transformer :
-                            any;
+                            T extends "util" ? Util :
+                                never;
 
-type KnownRequireNames = "version" | "cfg" | "kv" | "timer" | "finder" | "transformer";
+type KnownRequireNames = "version" | "cfg" | "kv" | "timer" | "finder" | "transformer" | "util";
 
 declare interface VM {
     getVMInfo(): string;
@@ -74,19 +75,17 @@ declare interface TimerFactory {
 }
 
 declare interface Finder {
-    getFile(vpt: string): any;
+    getFile(vpt: string): any; /* File */
 
-    readFileContent(vpt: string): any;
+    readFileContent(vpt: string): any; /* byte[] */
 }
 
-declare interface Transformer {
-    from(source: any): TByteArray;
-}
+declare interface Util {
+    decodeString(a: any /* byte[] */): string;
 
-declare interface TByteArray {
-    getLength(): number;
+    encodeString(a: string): any; /* byte[] */
 
-    nextByte(): number;
+    toArray(a: any /* T[] */): any[];
 }
 
 // @ts-ignore
