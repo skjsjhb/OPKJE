@@ -31,21 +31,8 @@ public class KV {
     @Nullable
     @Expose
     @SuppressWarnings("unused")
-    public static Object get(String k) {
-        if (!kv.containsKey(k)) {
-            return null;
-        }
-        try {
-            String src = kv.get(k);
-            ByteArrayInputStream bi = new ByteArrayInputStream(src.getBytes());
-            ObjectInputStream oi = new ObjectInputStream(bi);
-            return oi.readObject();
-        } catch (IOException e) {
-            System.err.println("Could not read object: " + e);
-        } catch (ClassNotFoundException e) {
-            System.err.println("Corresponding class not found: " + e);
-        }
-        return null;
+    public static String get(String k) {
+        return kv.get(k);
     }
 
     /**
@@ -59,7 +46,7 @@ public class KV {
             ObjectInputStream ois = new ObjectInputStream(fis);
             kv = (Map<String, String>) ois.readObject();
             ois.close();
-            System.out.println("KV data loaded.");
+            System.out.printf("KV data loaded. (%d entries)\n", kv.size());
         } catch (FileNotFoundException ignored) {
             // This is not considered an error
             System.out.println("KV file does not exist. Skipped loading.");
@@ -81,7 +68,7 @@ public class KV {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(kv);
             oos.close();
-            System.out.println("KV data saved.");
+            System.out.printf("KV data saved. (%d entries)\n", kv.size());
         } catch (IOException e) {
             System.err.println("Could not save KV: " + e);
         }
@@ -91,14 +78,8 @@ public class KV {
      * Set an object in this KV.
      */
     @Expose
-    public static void set(String k, Object v) {
-        try {
-            ByteArrayOutputStream ba = new ByteArrayOutputStream();
-            ObjectOutputStream objOutput = new ObjectOutputStream(ba);
-            objOutput.writeObject(v);
-            kv.put(k, ba.toString());
-        } catch (IOException e) {
-            System.err.println("Could not write object: " + e);
-        }
+    @SuppressWarnings("unused")
+    public static void set(String k, String v) {
+        kv.put(k, v);
     }
 }
