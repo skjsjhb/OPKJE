@@ -5,6 +5,8 @@ import skjsjhb.rhytick.opfw.je.dce.Expose;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * The finder for guest script. With extra limitation and checks.
@@ -36,11 +38,30 @@ public class GuestFinder {
      */
     @Expose
     @SuppressWarnings("unused")
-    public byte[] readFileContent(String vpt) {
+    public byte[] readFile(String vpt) {
         try {
             return Finder.readFileBytes(vpt);
         } catch (IOException e) {
+            System.err.println("Could not read file " + vpt + ": " + e);
             return new byte[0];
+        }
+    }
+
+    @Expose
+    @SuppressWarnings("unused")
+    public void writeFile(String vpt, String content) {
+        writeFile(vpt, content.getBytes());
+    }
+
+    @Expose
+    @SuppressWarnings("unused")
+    public void writeFile(String vpt, byte[] buf) {
+        try {
+            Finder.checkPathBounds(vpt);
+            Finder.ensureDir(vpt);
+            Files.write(Paths.get(Finder.resolve(vpt)), buf);
+        } catch (IOException e) {
+            System.err.println("Could not write file " + vpt + ": " + e);
         }
     }
 }

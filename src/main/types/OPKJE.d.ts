@@ -58,7 +58,7 @@ declare interface Cfg {
 }
 
 declare interface KV {
-    get(key: string): string;
+    get(key: string): string | null;
 
     set(key: string, value: string): void;
 }
@@ -75,15 +75,15 @@ declare interface TimerFactory {
 }
 
 declare interface Finder {
-    getFile(vpt: string): any; /* File */
+    readFile(vpt: string): any; /* byte[] */
 
-    readFileContent(vpt: string): any; /* byte[] */
+    writeFile(vpt: string, dat: Uint8Array | string): void;
 }
 
 declare interface Util {
-    decodeString(a: any /* byte[] */): string;
+    decodeString(a: Uint8Array): string;
 
-    encodeString(a: string): any; /* byte[] */
+    encodeString(a: string): Uint8Array;
 
     toArray(a: any /* T[] */): any[];
 }
