@@ -21,12 +21,19 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 public @interface DCEModule {
     /**
-     * If set to {@code true}, the annotated class is registered using {@link JavaScriptEnv#setGlobal(String, Object)},
+     * If set to {@code true}, the annotated class is registered using {@link ScriptEnv#setGlobal(String, Object)},
      * rather than as a module.
      * <br/>
      * To avoid possible global variable pollution, this should be used with limitations and care.
      */
     boolean asGlobal() default false;
+
+    /**
+     * If set to {@code true}, the <b>class</b> of the annotated class is registered, rather than an instance.
+     * <br/>
+     * The word {@code statik} is not a typo.
+     */
+    boolean statik() default false;
 
     /**
      * The module name, or the global name if {@link #asGlobal()} is {@code true}.

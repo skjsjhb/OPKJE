@@ -10,20 +10,24 @@ import java.lang.reflect.InvocationTargetException;
  * Refers to the Opticia main script.
  */
 public class Emulation {
-    protected JavaScriptEnv jsEnv;
+    protected ScriptEnv jsEnv;
 
     public Emulation() {
         System.out.println("Creating compatible layer for Opticia.");
-        jsEnv = new JavaScriptEnv();
+        jsEnv = new ScriptEnv();
         System.out.println("Engine created: " + jsEnv.getEngineInfo());
     }
 
     /**
      * Register native interfaces using reflection.
      * <br/>
-     * All public classes annotated with
+     * All public classes annotated with {@link DCEModule} will be registered as a module / global in this emulation
+     * session.
+     * <br/>
+     * Corresponding type definitions are in {@code src/main/types/OPKJE.d.ts}.
      */
     protected void registerNatives() {
+        System.out.println("Enabling native bindings.");
         try {
             var classInfos = ClassPath
                     .from(getClass().getClassLoader())
@@ -38,13 +42,18 @@ public class Emulation {
                     var cons = clazz.getConstructor();
                     DCEModule m = clazz.getAnnotation(DCEModule.class);
                     String name = m.value();
-                    Object inst = cons.newInstance();
-                    if (m.asGlobal()) {
-                        jsEnv.setGlobal(name, inst);
+                    Object inst;
+                    if (m.statik()) {
+                        inst = clazz; // Register a static one
                     } else {
-                        jsEnv.setModule(name, inst);
+                        inst = cons.newInstance();
                     }
-                    System.out.println("Emulation native interface registered: " + cls.getName());
+                    if (m.asGlobal()) {
+                        jsEnv.setGlobal(name, inst, m.statik());
+                    } else {
+                        jsEnv.setModule(name, inst, m.statik());
+                    }
+                    System.out.println("Binding: " + cls.getName() + (m.statik() ? " [STATIC]" : " [INSTANCE]"));
                 } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                          InvocationTargetException e) {
                     System.err.println("Could not instantiate " + cls.getName() + ": " + e);

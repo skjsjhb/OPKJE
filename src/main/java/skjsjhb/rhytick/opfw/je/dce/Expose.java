@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * DCE access-grating annotation.
  * <br/>
  * By annotating an interface (public class, method, field) with this annotation, guest code running in
- * {@link JavaScriptEnv} will be able to use it.
+ * {@link ScriptEnv} will be able to use it.
  * <br/>
  *
  * @apiNote Out of security concerns, all accessible interfaces (public constructors, methods, fields) must also

@@ -21,7 +21,10 @@ public final class Launcher {
                  IllegalAccessException e) {
             System.out.println("Could not initialize UI look and feel: " + e);
         }
+        System.out.println("Preparing for launch...");
         prepareLaunch();
+        System.out.println("This is OPKJE, JVM edition of the OPK compatibility layer.");
+        System.out.println("OPKJE is part of the OPFW Series.");
         Emulation emul = new Emulation();
         try {
             emul.start();

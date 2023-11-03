@@ -18,7 +18,7 @@ public class GuestFinder {
      * @return Opened file object.
      * @apiNote Although the return value is an real instance of {@link File}, it is not accessible from the guest
      * (since class {@code java.io.File} is not exposed to guest). The value can only be used as a reference when
-     * intepreting in the JS environment.
+     * intepreting in the guest environment.
      */
     @Expose
     @SuppressWarnings("unused")

@@ -20,11 +20,16 @@ import java.util.Map;
  * <br/>
  * This class internally holds a {@link Loop} to manage concepts like 'tick' in Node.js and browsers.
  */
-public class JavaScriptEnv {
+public class ScriptEnv {
     /**
      * Internal field for loading bundled script.
      */
     protected static final String BUNDLED_SCRIPT_NAME = "preload.js";
+
+    /**
+     * Static field identifier.
+     */
+    protected static final String STATIC_FIELD_ID = "static";
 
     /**
      * Internal field to cache all registered modules.
@@ -47,14 +52,31 @@ public class JavaScriptEnv {
      * enabling these features, you trust the code which is going to run on this instance. Untrusted code
      * will have access to low-level APIs and will bring unnecessary risk to the client system.
      */
-    public JavaScriptEnv() {
+    public ScriptEnv() {
         var hab = HostAccess.newBuilder();
         hab.allowAccessAnnotatedBy(Expose.class);
         vm = Context.newBuilder("js")
                 .allowHostAccess(hab.build())
                 .allowValueSharing(false)
-                .logHandler(System.out)
+                .out(System.out)
+                .err(System.err)
                 .build();
+    }
+
+    /**
+     * Convert and extract the static field of the specified object.
+     *
+     * @param o Interface object.
+     * @return Converted value, or {@code null} if invalid.
+     */
+    @Nullable
+    protected Value asStatic(Object o) {
+        Value val = vm.asValue(o);
+        if (!val.getMemberKeys().contains(STATIC_FIELD_ID)) {
+            System.err.println("Attempting to expose a non-static interface as static.");
+            return null;
+        }
+        return val.getMember(STATIC_FIELD_ID);
     }
 
     /**
@@ -63,9 +85,10 @@ public class JavaScriptEnv {
      * @return Readable info about the engine.
      */
     public String getEngineInfo() {
-        return "JavaScriptEnv ("
+        return "ScriptEnv ("
                 + vm.getEngine().getImplementationName() + ", "
-                + vm.getEngine().getVersion() + ")";
+                + vm.getEngine().getVersion() + ", "
+                + vm.getEngine().getLanguages() + ")";
     }
 
     /**
@@ -79,7 +102,7 @@ public class JavaScriptEnv {
      * Initialize basic built-in VM controlling APIs for guest script.
      */
     public void initVMAPI() {
-        setGlobal("VM", new VMAPI(this));
+        setGlobal("VM", new VMAPI(this), false);
     }
 
     /**
@@ -123,23 +146,25 @@ public class JavaScriptEnv {
      * @throws IOException If the script file could not be read, or the integrity check failed.
      */
     protected void loadScriptImmediate(String name) throws IOException {
-        vm.eval(Source.create("js", readScriptSource(name)));
+        vm.eval(Source.create("js", readScriptSource(name))); // TODO
     }
 
     /**
-     * Push a script to be evaluated on the end of current loop.
+     * Push a script to be evaluated on the end of current loop. The script source is created immediately, but its
+     * execution happens in the next loop.
      * <br/>
      * This method can be called from any thread, but only after the vm starts.
      *
-     * @param src JavaScript source.
+     * @param src Script source.
      * @apiNote <b>Warning: </b>Executing untrusted code will bring security issues.
-     * See {@link JavaScriptEnv#JavaScriptEnv()} for details.
+     * See {@link ScriptEnv#ScriptEnv()} for details.
      */
     public void pushScript(String src) {
         if (vmLoop == null) {
             throw new IllegalStateException("pushing script before vm loop starts");
         }
-        vmLoop.push(() -> vm.eval(Source.create("js", src)));
+        Source s = Source.create("js", src);
+        vmLoop.push(() -> vm.eval(s));
     }
 
     /**
@@ -169,34 +194,36 @@ public class JavaScriptEnv {
     /**
      * Expose a public interface annotated with {@link Expose}.
      *
-     * @param name Global identifier for the instance to bind.
-     * @param ctx  Context object to be bound.
+     * @param name   Global identifier for the instance to bind.
+     * @param ctx    Context object to be bound.
+     * @param statik Whether to destruct the object and extract the static field.
      * @apiNote This method might cause security issues. See {@link Expose} for details.
      * @see Expose
      */
-    public void setGlobal(String name, Object ctx) {
-        vm.getBindings("js").putMember(name, ctx);
+    public void setGlobal(String name, Object ctx, boolean statik) {
+        vm.getBindings("js").putMember(name, statik ? asStatic(ctx) : ctx);
     }
 
     /**
      * Sets a module with indexed key.
      * <br/>
-     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code module()} to
+     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code VM.require} to
      * get the module instance.
      *
      * @param name Module name.
      * @param ctx  Module implementation object.
      */
-    public void setModule(String name, Object ctx) {
-        moduleMap.put(name, ctx);
+    public void setModule(String name, Object ctx, boolean statik) {
+        moduleMap.put(name, statik ? asStatic(ctx) : ctx);
     }
 
     /**
-     * Start the JS engine on current thread.
+     * Start the engine on current thread.
      * <br/>
      * This method blocks until the VM loop stops.
      */
     public void start() {
+        System.out.println("[OPKJE ScriptEnv Started]");
         vmLoop.start();
     }
 
@@ -205,10 +232,20 @@ public class JavaScriptEnv {
      * This interface is special and is registered internally, without using auto registration.
      */
     public static class VMAPI {
-        protected JavaScriptEnv env;
+        protected ScriptEnv env;
 
-        public VMAPI(JavaScriptEnv e) {
+        public VMAPI(ScriptEnv e) {
             env = e;
+        }
+
+        /**
+         * Gets engine info.
+         *
+         * @return Engine info returned from {@link ScriptEnv#getEngineInfo()}.
+         */
+        @Expose
+        public String getVMInfo() {
+            return env.getEngineInfo();
         }
 
         /**
@@ -235,7 +272,7 @@ public class JavaScriptEnv {
          * Request a function to be called on the next 'tick'.
          * <br/>
          * Although there is no such concept named 'tick' in our implementation, the 'next tick'
-         * usually refers to the next call after the current execution call.
+         * usually refers to the next loop of evaluation after the current execution call.
          * <br/>
          * TS signature:
          * <pre>requestLoop(f:()=>any):void</pre>

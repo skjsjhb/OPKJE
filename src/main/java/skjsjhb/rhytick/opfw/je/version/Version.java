@@ -7,7 +7,7 @@ import skjsjhb.rhytick.opfw.je.dce.Expose;
 /**
  * Meta class declaring the version of the framework.
  */
-@DCEModule("version")
+@DCEModule(value = "version", statik = true)
 public final class Version {
     /**
      * Gets the API version.
@@ -16,7 +16,7 @@ public final class Version {
      * @apiNote APIs are not guaranteed to
      */
     @Expose
-    public int getAPIVersion() {
+    public static int getAPIVersion() {
         return Cfg.getInt("version.api_ver");
     }
 
@@ -26,7 +26,7 @@ public final class Version {
      * @return Generated product info.
      */
     @Expose
-    public String getProdString() {
+    public static String getProdString() {
         return Cfg.getValue("version.api_name") + " Version " +
                 Cfg.getValue("version.api_ver") + " (" +
                 Cfg.getValue("version.impl_name") + " " +

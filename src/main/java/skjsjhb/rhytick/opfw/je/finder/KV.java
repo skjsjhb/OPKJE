@@ -1,5 +1,8 @@
 package skjsjhb.rhytick.opfw.je.finder;
 
+import skjsjhb.rhytick.opfw.je.dce.DCEModule;
+import skjsjhb.rhytick.opfw.je.dce.Expose;
+
 import javax.annotation.Nullable;
 import java.io.*;
 import java.util.Hashtable;
@@ -8,6 +11,7 @@ import java.util.Map;
 /**
  * Key-value storage for guest script.
  */
+@DCEModule(value = "kv", statik = true)
 public class KV {
     /**
      * The location of KV data file.
@@ -25,6 +29,7 @@ public class KV {
      * The value is loaded from the map, parsed and then returned as an object. If failed, it will return null.
      */
     @Nullable
+    @Expose
     @SuppressWarnings("unused")
     public static Object get(String k) {
         if (!kv.containsKey(k)) {
@@ -85,6 +90,7 @@ public class KV {
     /**
      * Set an object in this KV.
      */
+    @Expose
     public static void set(String k, Object v) {
         try {
             ByteArrayOutputStream ba = new ByteArrayOutputStream();

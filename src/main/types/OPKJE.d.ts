@@ -21,6 +21,8 @@ type KnownRequireTypeMap<T> =
 type KnownRequireNames = "version" | "cfg" | "kv" | "timer" | "finder" | "transformer";
 
 declare interface VM {
+    getVMInfo(): string;
+
     library(name: string): void;
 
     requestLoop(f: () => any): void;
