@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link Emulation#registerNatives()} will scan all classes annotated with this symbol and register them automatically
+ * {@link Modular#autoRegister()} will scan all classes annotated with this symbol and register them automatically
  * for the intepreter.
  * <br/>
  * The class annotated must be public and contains at least one public constructor without any parameters. Otherwise

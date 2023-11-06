@@ -1,10 +1,8 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
-import com.google.common.reflect.ClassPath;
 import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Refers to the Opticia main script.
@@ -16,48 +14,6 @@ public class Emulation {
         System.out.println("Creating compatible layer for Opticia.");
         jsEnv = new ScriptEnv();
         System.out.println("Engine created: " + jsEnv.getEngineInfo());
-    }
-
-    /**
-     * Register native interfaces using reflection.
-     * <br/>
-     * All public classes annotated with {@link GuestModule} will be registered as a module / global in this emulation
-     * session.
-     * <br/>
-     * Corresponding type definitions are in {@code src/main/types/OPKJE.d.ts}.
-     */
-    protected void registerNatives() {
-        System.out.println("Enabling native bindings.");
-        try {
-            var classInfos = ClassPath
-                    .from(getClass().getClassLoader())
-                    .getTopLevelClassesRecursive("skjsjhb.rhytick.opfw.je");
-
-            for (var cls : classInfos) {
-                var clazz = cls.load();
-                if (!clazz.isAnnotationPresent(GuestModule.class)) {
-                    continue; // Not the desired class
-                }
-                try {
-                    var cons = clazz.getConstructor();
-                    GuestModule m = clazz.getAnnotation(GuestModule.class);
-                    String name = m.value();
-                    Object inst;
-                    if (m.statik()) {
-                        inst = clazz; // Register a static one
-                    } else {
-                        inst = cons.newInstance();
-                    }
-                    ScriptEnv.addModule(name, inst, m.statik());
-                    System.out.println("Binding: " + cls.getName() + (m.statik() ? " [STATIC]" : " [INSTANCE]"));
-                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-                         InvocationTargetException e) {
-                    System.err.println("Could not instantiate " + cls.getName() + ": " + e);
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Could not enumerate classes: " + e);
-        }
     }
 
     /**
@@ -74,7 +30,7 @@ public class Emulation {
      */
     public void start() {
         // Enable natives
-        registerNatives();
+        Modular.autoRegister();
 
         // Load necessary scripts
         System.out.println("Loading scripts.");

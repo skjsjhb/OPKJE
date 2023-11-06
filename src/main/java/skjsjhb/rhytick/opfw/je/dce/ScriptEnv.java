@@ -11,8 +11,6 @@ import skjsjhb.rhytick.opfw.je.schedule.Loop;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * JavaScript environment with optionally OPFW bindings based on GraalVM.
@@ -37,11 +35,6 @@ public class ScriptEnv {
      */
     protected static int pid = 0;
 
-    /**
-     * Internal field to cache all registered modules.
-     */
-    protected static Map<String, ScriptModuleEntry> sharedModuleMap = new Hashtable<>();
-
 
     /**
      * The ID of this env.
@@ -65,31 +58,22 @@ public class ScriptEnv {
      * will have access to low-level APIs and will bring unnecessary risk to the client system.
      */
     public ScriptEnv() {
+        vm = createContext();
+        id = pid++;
+    }
+
+    /**
+     * Internal method for creating a context.
+     */
+    protected static Context createContext() {
         var hab = HostAccess.newBuilder();
         hab.allowAccessAnnotatedBy(Expose.class);
-        vm = Context.newBuilder("js")
+        return Context.newBuilder("js")
                 .allowHostAccess(hab.build())
                 .allowValueSharing(false)
                 .out(System.out)
                 .err(System.err)
                 .build();
-        id = pid++;
-    }
-
-    /**
-     * Registers a module with indexed key.
-     * <br/>
-     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code VM.require} to
-     * get the module instance. Modules are statically registered and can be shared between contexts.
-     * <br/>
-     * When registering with {@link GuestModule}, modules must be thread-safe. Otherwise exceptions will happen
-     * when being accessed from multiple threads.
-     *
-     * @param name Module name.
-     * @param ctx  Module implementation object.
-     */
-    public static void addModule(String name, Object ctx, boolean statik) {
-        sharedModuleMap.put(name, new ScriptModuleEntry(ctx, statik));
     }
 
     /**
@@ -248,102 +232,5 @@ public class ScriptEnv {
         System.out.printf("[ScriptEnv #%d Stopped]\n", id);
         vmLoop.requestStop();
         vm.close();
-    }
-
-    protected static class ScriptModuleEntry {
-        Object instance; // Module unique instance
-
-        boolean isStatic;
-
-        ScriptModuleEntry(Object aInst, boolean aStatic) {
-            instance = aInst;
-            isStatic = aStatic;
-        }
-    }
-
-    /**
-     * DCE interface for guest script to schedule tasks.
-     * This interface is special and is registered internally, without using auto registration.
-     */
-    public static class VMAPI {
-        protected ScriptEnv env;
-
-        public VMAPI(ScriptEnv e) {
-            env = e;
-        }
-
-        /**
-         * Gets engine info.
-         *
-         * @return Engine info returned from {@link ScriptEnv#getEngineInfo()}.
-         */
-        @Expose
-        public String getVMInfo() {
-            return env.getEngineInfo();
-        }
-
-        /**
-         * Request a library to be loaded from file and executued in the environment immediately.
-         * <br/>
-         * If the verification flag ({@code emulation.no_script_verify}) is not set, then the target script will
-         * be verified for security reasons. The guest script cannot skip it.
-         *
-         * @param name Path to the library file. The file is read using {@link Finder},
-         *             so make sure to get paths right.
-         */
-        @Expose
-        @SuppressWarnings("unused")
-        public void library(String name) {
-            try {
-                System.out.println("Guest requesting library: " + name);
-                env.loadScriptImmediate(name);
-            } catch (IOException e) {
-                System.err.printf("Failed to load library '%s': %s\n", name, e);
-            }
-        }
-
-        /**
-         * Request a function to be called on the next 'tick'.
-         * <br/>
-         * Although there is no such concept named 'tick' in our implementation, the 'next tick'
-         * usually refers to the next loop of evaluation after the current execution call.
-         */
-        @Expose
-        @SuppressWarnings("unused")
-        public void requestLoop(Value f) {
-            if (f.canExecute()) {
-                env.getLoop().push(f::execute);
-            }
-        }
-
-        /**
-         * Require a defined module.
-         *
-         * @param name Module name.
-         */
-        @Expose
-        @SuppressWarnings("unused")
-        @Nullable
-        public Object require(String name) {
-            ScriptModuleEntry sme = sharedModuleMap.get(name);
-            if (sme == null) {
-                return null;
-            }
-            if (sme.isStatic) {
-                return env.makeStatic(sme.instance);
-            }
-            return sme.instance;
-        }
-
-        /**
-         * Stop the VM.
-         * <br/>
-         * This will stop the VM immediately, without waiting for resting tasks.
-         */
-        @Expose
-        @SuppressWarnings("unused")
-        public void stop() {
-            env.stop();
-        }
     }
 }
