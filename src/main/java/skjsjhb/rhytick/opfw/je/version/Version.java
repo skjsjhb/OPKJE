@@ -1,13 +1,13 @@
 package skjsjhb.rhytick.opfw.je.version;
 
-import skjsjhb.rhytick.opfw.je.dce.DCEModule;
 import skjsjhb.rhytick.opfw.je.dce.Expose;
+import skjsjhb.rhytick.opfw.je.dce.GuestModule;
 import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 
 /**
  * Meta class declaring the version of the framework.
  */
-@DCEModule(value = "version", statik = true)
+@GuestModule(value = "version", statik = true)
 public final class Version {
     /**
      * Gets the API version.

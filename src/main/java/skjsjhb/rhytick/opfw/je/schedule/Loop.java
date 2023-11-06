@@ -41,6 +41,7 @@ public class Loop {
      * has stopped, nor indicating the future status of the loop.
      */
     public boolean isRunning() {
+        checkThread();
         return running;
     }
 
@@ -67,9 +68,6 @@ public class Loop {
      * @param a Task to add.
      */
     public void push(Task a) {
-        if (isRunning()) {
-            throw new IllegalStateException("loop is stopping");
-        }
         tasks.add(a);
         a.setLoop(this);
     }
@@ -100,5 +98,13 @@ public class Loop {
         homeThreadId = Thread.currentThread().threadId();
         running = true;
         loop();
+    }
+
+    /**
+     * Stop the loop and ignore any subsequent tasks.
+     */
+    public void stop() {
+        requestStop();
+        tasks.clear();
     }
 }

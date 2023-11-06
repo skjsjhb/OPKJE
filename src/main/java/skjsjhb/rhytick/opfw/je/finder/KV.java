@@ -1,7 +1,7 @@
 package skjsjhb.rhytick.opfw.je.finder;
 
-import skjsjhb.rhytick.opfw.je.dce.DCEModule;
 import skjsjhb.rhytick.opfw.je.dce.Expose;
+import skjsjhb.rhytick.opfw.je.dce.GuestModule;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Key-value storage for guest script.
  */
-@DCEModule(value = "kv", statik = true)
+@GuestModule(value = "kv", statik = true)
 public class KV {
     /**
      * The location of KV data file.
@@ -21,7 +21,7 @@ public class KV {
     /**
      * A map which stores key to binary stream of the stored object.
      */
-    protected static Map<String, String> kv = new Hashtable<>();
+    protected static Map<String, String> kv = new Hashtable<>(); // The table itself is thread-safe
 
     /**
      * Get the object stored in KV.

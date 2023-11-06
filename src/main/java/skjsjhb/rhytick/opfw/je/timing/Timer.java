@@ -1,7 +1,9 @@
 package skjsjhb.rhytick.opfw.je.timing;
 
 import skjsjhb.rhytick.opfw.je.dce.Expose;
+import skjsjhb.rhytick.opfw.je.dce.GuestModule;
 
+@GuestModule(value = "timer", statik = true)
 public class Timer {
     /**
      * Nano time offset for {@link #getHighResTime()}.
@@ -10,6 +12,14 @@ public class Timer {
 
     public Timer() {
         nanoTimeOffset = System.nanoTime();
+    }
+
+    /**
+     * Factory method.
+     */
+    @Expose
+    public static Timer newTimer() {
+        return new Timer();
     }
 
     /**
@@ -31,4 +41,5 @@ public class Timer {
     public long getHighResTime() {
         return System.nanoTime() - nanoTimeOffset;
     }
+
 }

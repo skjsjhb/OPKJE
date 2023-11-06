@@ -21,6 +21,7 @@ import java.util.Map;
  * This class internally holds a {@link Loop} to manage concepts like 'tick' in Node.js and browsers.
  */
 public class ScriptEnv {
+
     /**
      * Internal field for loading bundled script.
      */
@@ -32,9 +33,20 @@ public class ScriptEnv {
     protected static final String STATIC_FIELD_ID = "static";
 
     /**
+     * Internal method for naming different envs.
+     */
+    protected static int pid = 0;
+
+    /**
      * Internal field to cache all registered modules.
      */
-    protected Map<String, Object> moduleMap = new Hashtable<>();
+    protected static Map<String, ScriptModuleEntry> sharedModuleMap = new Hashtable<>();
+
+
+    /**
+     * The ID of this env.
+     */
+    protected int id;
 
     /**
      * Internal GraalVM instance.
@@ -61,22 +73,23 @@ public class ScriptEnv {
                 .out(System.out)
                 .err(System.err)
                 .build();
+        id = pid++;
     }
 
     /**
-     * Convert and extract the static field of the specified object.
+     * Registers a module with indexed key.
+     * <br/>
+     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code VM.require} to
+     * get the module instance. Modules are statically registered and can be shared between contexts.
+     * <br/>
+     * When registering with {@link GuestModule}, modules must be thread-safe. Otherwise exceptions will happen
+     * when being accessed from multiple threads.
      *
-     * @param o Interface object.
-     * @return Converted value, or {@code null} if invalid.
+     * @param name Module name.
+     * @param ctx  Module implementation object.
      */
-    @Nullable
-    protected Value asStatic(Object o) {
-        Value val = vm.asValue(o);
-        if (!val.getMemberKeys().contains(STATIC_FIELD_ID)) {
-            System.err.println("Attempting to expose a non-static interface as static.");
-            return null;
-        }
-        return val.getMember(STATIC_FIELD_ID);
+    public static void addModule(String name, Object ctx, boolean statik) {
+        sharedModuleMap.put(name, new ScriptModuleEntry(ctx, statik));
     }
 
     /**
@@ -85,9 +98,8 @@ public class ScriptEnv {
      * @return Readable info about the engine.
      */
     public String getEngineInfo() {
-        return "ScriptEnv ("
-                + vm.getEngine().getImplementationName() + ", "
-                + vm.getEngine().getVersion() + ")";
+        return String.format("ScriptEnv #%d (%s, %s)", id,
+                vm.getEngine().getImplementationName(), vm.getEngine().getVersion());
     }
 
     /**
@@ -149,6 +161,22 @@ public class ScriptEnv {
     }
 
     /**
+     * Convert and extract the static field of the specified object.
+     *
+     * @param o Interface object.
+     * @return Converted value, or {@code null} if invalid.
+     */
+    @Nullable
+    protected Value makeStatic(Object o) {
+        Value val = vm.asValue(o);
+        if (!val.getMemberKeys().contains(STATIC_FIELD_ID)) {
+            System.err.println("Attempting to expose a non-static interface as static.");
+            return null;
+        }
+        return val.getMember(STATIC_FIELD_ID);
+    }
+
+    /**
      * Push a script to be evaluated on the end of current loop. The script source is created immediately, but its
      * execution happens in the next loop.
      * <br/>
@@ -200,20 +228,7 @@ public class ScriptEnv {
      * @see Expose
      */
     public void setGlobal(String name, Object ctx, boolean statik) {
-        vm.getBindings("js").putMember(name, statik ? asStatic(ctx) : ctx);
-    }
-
-    /**
-     * Sets a module with indexed key.
-     * <br/>
-     * Unlike globals, modules are not loaded or injected by default. Guest script uses {@code VM.require} to
-     * get the module instance.
-     *
-     * @param name Module name.
-     * @param ctx  Module implementation object.
-     */
-    public void setModule(String name, Object ctx, boolean statik) {
-        moduleMap.put(name, statik ? asStatic(ctx) : ctx);
+        vm.getBindings("js").putMember(name, statik ? makeStatic(ctx) : ctx);
     }
 
     /**
@@ -222,8 +237,28 @@ public class ScriptEnv {
      * This method blocks until the VM loop stops.
      */
     public void start() {
-        System.out.println("[OPKJE ScriptEnv Started]");
+        System.out.printf("[ScriptEnv #%d Started]\n", id);
         vmLoop.start();
+    }
+
+    /**
+     * Stop the loop and the engine.
+     */
+    public void stop() {
+        System.out.printf("[ScriptEnv #%d Stopped]\n", id);
+        vmLoop.requestStop();
+        vm.close();
+    }
+
+    protected static class ScriptModuleEntry {
+        Object instance; // Module unique instance
+
+        boolean isStatic;
+
+        ScriptModuleEntry(Object aInst, boolean aStatic) {
+            instance = aInst;
+            isStatic = aStatic;
+        }
     }
 
     /**
@@ -272,9 +307,6 @@ public class ScriptEnv {
          * <br/>
          * Although there is no such concept named 'tick' in our implementation, the 'next tick'
          * usually refers to the next loop of evaluation after the current execution call.
-         * <br/>
-         * TS signature:
-         * <pre>requestLoop(f:()=>any):void</pre>
          */
         @Expose
         @SuppressWarnings("unused")
@@ -286,9 +318,6 @@ public class ScriptEnv {
 
         /**
          * Require a defined module.
-         * <br/>
-         * TS signature:
-         * <pre>require(name:string):any</pre>
          *
          * @param name Module name.
          */
@@ -296,21 +325,25 @@ public class ScriptEnv {
         @SuppressWarnings("unused")
         @Nullable
         public Object require(String name) {
-            return env.moduleMap.get(name);
+            ScriptModuleEntry sme = sharedModuleMap.get(name);
+            if (sme == null) {
+                return null;
+            }
+            if (sme.isStatic) {
+                return env.makeStatic(sme.instance);
+            }
+            return sme.instance;
         }
 
         /**
          * Stop the VM.
          * <br/>
          * This will stop the VM immediately, without waiting for resting tasks.
-         * <br/>
-         * TS signature:
-         * <pre>stop():void</pre>
          */
         @Expose
         @SuppressWarnings("unused")
         public void stop() {
-            env.getLoop().requestStop();
+            env.stop();
         }
     }
 }

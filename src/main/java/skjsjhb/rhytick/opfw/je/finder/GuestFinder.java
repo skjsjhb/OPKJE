@@ -1,7 +1,7 @@
 package skjsjhb.rhytick.opfw.je.finder;
 
-import skjsjhb.rhytick.opfw.je.dce.DCEModule;
 import skjsjhb.rhytick.opfw.je.dce.Expose;
+import skjsjhb.rhytick.opfw.je.dce.GuestModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 /**
  * The finder for guest script. With extra limitation and checks.
  */
-@DCEModule(value = "finder", statik = true)
+@GuestModule(value = "finder", statik = true)
 @SuppressWarnings("unused")
 public class GuestFinder {
     /**

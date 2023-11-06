@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * DCE access-grating annotation.
+ * Guest access-grating annotation.
  * <br/>
  * By annotating an interface (public class, method, field) with this annotation, guest code running in
  * {@link ScriptEnv} will be able to use it.

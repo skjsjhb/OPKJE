@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * Utilities implementing missing methods in script platform.
  */
-@DCEModule(value = "util", statik = true)
+@GuestModule(value = "util", statik = true)
 @SuppressWarnings("unused")
 public class Util {
     /**
@@ -39,6 +39,10 @@ public class Util {
      * <br/>
      * The param is claimed to be of type {@link Object}, to be compatible with GraalVM types. However, the
      * object must be of type {@code T[]} during its call and a dynamic cast will happen.
+     * <br/>
+     * The param {@code array} should never be shared since {@code T[]} is not thread-safe. Multiple generated
+     * {@link ProxyArray} have access to the array simultaneously regardless of it's caller. This will bring
+     * undefined behavior.
      */
     @Expose
     @SuppressWarnings("unused")

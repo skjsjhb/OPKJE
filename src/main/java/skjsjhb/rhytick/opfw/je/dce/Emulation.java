@@ -21,7 +21,7 @@ public class Emulation {
     /**
      * Register native interfaces using reflection.
      * <br/>
-     * All public classes annotated with {@link DCEModule} will be registered as a module / global in this emulation
+     * All public classes annotated with {@link GuestModule} will be registered as a module / global in this emulation
      * session.
      * <br/>
      * Corresponding type definitions are in {@code src/main/types/OPKJE.d.ts}.
@@ -35,12 +35,12 @@ public class Emulation {
 
             for (var cls : classInfos) {
                 var clazz = cls.load();
-                if (!clazz.isAnnotationPresent(DCEModule.class)) {
+                if (!clazz.isAnnotationPresent(GuestModule.class)) {
                     continue; // Not the desired class
                 }
                 try {
                     var cons = clazz.getConstructor();
-                    DCEModule m = clazz.getAnnotation(DCEModule.class);
+                    GuestModule m = clazz.getAnnotation(GuestModule.class);
                     String name = m.value();
                     Object inst;
                     if (m.statik()) {
@@ -48,11 +48,7 @@ public class Emulation {
                     } else {
                         inst = cons.newInstance();
                     }
-                    if (m.asGlobal()) {
-                        jsEnv.setGlobal(name, inst, m.statik());
-                    } else {
-                        jsEnv.setModule(name, inst, m.statik());
-                    }
+                    ScriptEnv.addModule(name, inst, m.statik());
                     System.out.println("Binding: " + cls.getName() + (m.statik() ? " [STATIC]" : " [INSTANCE]"));
                 } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                          InvocationTargetException e) {
