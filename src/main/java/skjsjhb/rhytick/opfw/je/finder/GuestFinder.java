@@ -12,7 +12,7 @@ import java.nio.file.Paths;
  */
 @GuestModule(value = "finder", statik = true)
 @SuppressWarnings("unused")
-public class GuestFinder {
+public final class GuestFinder {
     /**
      * Reads the content of given file path.
      *

@@ -10,20 +10,20 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Storage path provider.
  */
-public class Finder {
-    protected static final String SIG_ALGO = "SHA-256";
+public final class Finder {
+    private static final String SIG_ALGO = "SHA-256";
 
-    protected static final String SIG_EXT = ".sig";
+    private static final String SIG_EXT = ".sig";
 
     /**
      * OPFW base path
      */
-    protected static String root = "";
+    private static String root = "";
 
     /**
      * Internal method for encoding byte to hex.
      */
-    protected static String byteToHex(byte num) {
+    private static String byteToHex(byte num) {
         char[] hexDigits = new char[2];
         hexDigits[0] = Character.forDigit((num >> 4) & 0xF, 16);
         hexDigits[1] = Character.forDigit((num & 0xF), 16);
@@ -52,7 +52,7 @@ public class Finder {
     /**
      * Check if the root path is configured.
      */
-    protected static void checkRoot() {
+    private static void checkRoot() {
         if (root.isEmpty()) {
             throw new IllegalStateException("root path not configured");
         }
@@ -76,7 +76,7 @@ public class Finder {
      * @throws IOException If directory operations failed.
      */
     @SuppressWarnings("StatementWithEmptyBody")
-    protected static void configureRootPath() throws IOException {
+    private static void configureRootPath() throws IOException {
         String os = System.getProperty("os.name", "").toLowerCase();
         if (os.contains("mac") || os.contains("darwin")) {
             root = System.getProperty("user.home") + "/Library/Application Support/Rhytick/OPFW";
@@ -99,7 +99,7 @@ public class Finder {
     /**
      * Internal method for encoding byte to hex.
      */
-    protected static String encodeHexString(byte[] byteArray) {
+    private static String encodeHexString(byte[] byteArray) {
         StringBuilder hexStringBuffer = new StringBuilder();
         for (byte b : byteArray) {
             hexStringBuffer.append(byteToHex(b));

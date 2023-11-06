@@ -12,16 +12,16 @@ import java.util.Map;
  * Key-value storage for guest script.
  */
 @GuestModule(value = "kv", statik = true)
-public class KV {
+public final class KV {
     /**
      * The location of KV data file.
      */
-    protected static String KV_FILE_LOCATION = "/osr/kv";
+    private static final String KV_FILE_LOCATION = "/osr/kv";
 
     /**
      * A map which stores key to binary stream of the stored object.
      */
-    protected static Map<String, String> kv = new Hashtable<>(); // The table itself is thread-safe
+    private static Map<String, String> kv = new Hashtable<>(); // The table itself is thread-safe
 
     /**
      * Get the object stored in KV.

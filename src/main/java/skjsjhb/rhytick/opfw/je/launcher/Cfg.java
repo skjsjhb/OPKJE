@@ -10,11 +10,11 @@ import java.util.Objects;
 /**
  * OPFW config provider class.
  */
-public class Cfg {
+public final class Cfg {
 
-    protected static final String BUNDLED_CFG_NAME = "default.cfg";
+    private static final String BUNDLED_CFG_NAME = "default.cfg";
 
-    protected static Map<String, String> values = new HashMap<>();
+    private static final Map<String, String> values = new HashMap<>();
 
     /**
      * The overload of {@link #getBoolean(String, boolean)} with default value set to {@code false}.

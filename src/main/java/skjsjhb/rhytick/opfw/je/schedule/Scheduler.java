@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 /**
  * Schedule, queue and run tasks specified by the main function.
  */
-public class Scheduler {
+public final class Scheduler {
     /**
      * Run specified {@link Runnable} task on a seperated thread, without blocking the main loop
      * or other threads, or expecting any results.
@@ -32,6 +32,4 @@ public class Scheduler {
     public static void runOnWorkerThread(Supplier<Object> a, Consumer<Object> cb) {
         new Thread(() -> cb.accept(a.get())).start();
     }
-
-
 }

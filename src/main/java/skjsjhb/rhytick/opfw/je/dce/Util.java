@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
  */
 @GuestModule(value = "util", statik = true)
 @SuppressWarnings("unused")
-public class Util {
+public final class Util {
     /**
      * Decode {@code byte[]} to {@link String}.
      * <br/>
