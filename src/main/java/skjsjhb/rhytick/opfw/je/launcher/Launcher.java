@@ -1,6 +1,8 @@
 package skjsjhb.rhytick.opfw.je.launcher;
 
+import skjsjhb.rhytick.opfw.je.dce.Codeload;
 import skjsjhb.rhytick.opfw.je.dce.Emulation;
+import skjsjhb.rhytick.opfw.je.dce.Modular;
 import skjsjhb.rhytick.opfw.je.finder.Finder;
 import skjsjhb.rhytick.opfw.je.finder.KV;
 
@@ -24,10 +26,12 @@ public final class Launcher {
         prepareLaunch();
         System.out.println("This is OPKJE, JVM edition of the OPK compatibility layer.");
         System.out.println("OPKJE is part of the OPFW Series.");
-        Emulation emul = new Emulation();
         try {
-            emul.start();
-        } catch (Emulation.EmulationVMException e) {
+            Emulation me = new Emulation();
+            me.prepareRun();
+            String mainEntry = Cfg.getValue("emulation.entry", "/opt/main.js");
+            me.start(Codeload.readScriptSource(mainEntry));
+        } catch (Emulation.EmulationVMException | IOException e) {
             Reporter.reportError(e, "VM is required for code evaluation.\nThe application cannot continue.");
             System.exit(1);
         }
@@ -54,5 +58,6 @@ public final class Launcher {
         }
         Cfg.loadUserCfg(); // Make sure user cfg overrides the built-in one.
         KV.load();
+        Modular.autoRegister();
     }
 }

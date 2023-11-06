@@ -42,7 +42,7 @@ public class VMAPI {
     public void library(String name) {
         try {
             System.out.println("Guest requesting library: " + name);
-            env.loadScriptImmediate(name);
+            env.eval(Codeload.readScriptSource(name));
         } catch (IOException e) {
             System.err.printf("Failed to load library '%s': %s\n", name, e);
         }

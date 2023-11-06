@@ -42,7 +42,7 @@ public final class Modular {
      * <br/>
      * Corresponding type definitions are in {@code src/main/types/OPKJE.d.ts}.
      */
-    static void autoRegister() {
+    public static void autoRegister() {
         System.out.println("Enabling native bindings.");
         try {
             var classInfos = ClassPath

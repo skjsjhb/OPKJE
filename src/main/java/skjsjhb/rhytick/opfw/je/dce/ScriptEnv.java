@@ -4,8 +4,6 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import skjsjhb.rhytick.opfw.je.finder.Finder;
-import skjsjhb.rhytick.opfw.je.launcher.Cfg;
 import skjsjhb.rhytick.opfw.je.schedule.Loop;
 
 import javax.annotation.Nullable;
@@ -77,6 +75,13 @@ public class ScriptEnv {
     }
 
     /**
+     * Forward of {@link Context#eval(Source)} without return value.
+     */
+    public void eval(String src) {
+        vm.eval("js", src);
+    }
+
+    /**
      * Get engine info as string.
      *
      * @return Readable info about the engine.
@@ -84,6 +89,13 @@ public class ScriptEnv {
     public String getEngineInfo() {
         return String.format("ScriptEnv #%d (%s, %s)", id,
                 vm.getEngine().getImplementationName(), vm.getEngine().getVersion());
+    }
+
+    /**
+     * Get the ID of this env.
+     */
+    public int getID() {
+        return id;
     }
 
     /**
@@ -122,29 +134,6 @@ public class ScriptEnv {
     }
 
     /**
-     * Load a script from file and push it into the vm script queue.
-     *
-     * @param name Script name.
-     * @throws IOException If the script file could not be read, or the integrity check failed.
-     */
-    protected void loadScriptAsync(String name) throws IOException {
-        pushScript(readScriptSource(name));
-    }
-
-    /**
-     * Load a script from file and execute it immediately, regardless of the loop status.
-     * <br/>
-     * This method is blocking and the script being loaded, unless absolutely necessary, should consider
-     * {@link #loadScriptAsync(String)} instead.
-     *
-     * @param name Script name.
-     * @throws IOException If the script file could not be read, or the integrity check failed.
-     */
-    protected void loadScriptImmediate(String name) throws IOException {
-        vm.eval(Source.create("js", readScriptSource(name)));
-    }
-
-    /**
      * Convert and extract the static field of the specified object.
      *
      * @param o Interface object.
@@ -179,30 +168,6 @@ public class ScriptEnv {
     }
 
     /**
-     * Reads a script source from file.
-     * <br/>
-     * Scripts of specific name can be found at <pre>/opt/(name).js</pre>. The script file is read, and verified
-     * together with <pre>(name).js.sig</pre>. The signature might be optional for other files, but for scripts,
-     * they are necessary, unless flag <pre>emulation.no_script_verify</pre> is set, which is for dev purpose only.
-     *
-     * @param name Script virtual path.
-     * @return The source code of the script.
-     * @throws IOException If I/O errors occurred.
-     */
-    protected String readScriptSource(String name) throws IOException {
-        boolean noVerify = Cfg.getBoolean("emulation.no_script_verify", false);
-        if (noVerify) {
-            System.out.println("Script integrity check has been disabled. The usage of this flag should be limited within" +
-                    " development only.");
-        }
-        byte[] buf = Finder.readFileBytes(name, !noVerify);
-        if (buf.length == 0) {
-            throw new IOException("empty script source");
-        }
-        return new String(buf);
-    }
-
-    /**
      * Expose a public interface annotated with {@link Expose}.
      *
      * @param name   Global identifier for the instance to bind.
@@ -221,8 +186,11 @@ public class ScriptEnv {
      * This method blocks until the VM loop stops.
      */
     public void start() {
+        vm.enter();
         System.out.printf("[ScriptEnv #%d Started]\n", id);
         vmLoop.start();
+        vm.leave();
+        vm.close();
     }
 
     /**
@@ -231,6 +199,5 @@ public class ScriptEnv {
     public void stop() {
         System.out.printf("[ScriptEnv #%d Stopped]\n", id);
         vmLoop.requestStop();
-        vm.close();
     }
 }

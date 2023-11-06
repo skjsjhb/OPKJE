@@ -1,7 +1,5 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
-import skjsjhb.rhytick.opfw.je.launcher.Cfg;
-
 import java.io.IOException;
 
 /**
@@ -11,46 +9,53 @@ public class Emulation {
     protected ScriptEnv jsEnv;
 
     public Emulation() {
-        System.out.println("Creating compatible layer for Opticia.");
         jsEnv = new ScriptEnv();
         System.out.println("Engine created: " + jsEnv.getEngineInfo());
     }
 
     /**
-     * Start the emulation thread.
-     * <br/>
-     * The natives are registered, then preload and main script entries are loaded. If all above wents fine, the VM
-     * is started.
-     * <br/>
-     * The preload script is a 'glue', or say, compatibility provider to implement OPFW specification which are not
-     * (or not easy to be) provided by OPKJE itself. It's loaded from the resources directory. The main script is the
-     * Opticia executable and is stored at the data directory.
+     * Get the ID of the underlying env id.
+     */
+    public int getEnvID() {
+        return jsEnv.getID();
+    }
+
+
+    /**
+     * Prepare for the run of the code.
+     */
+    public void prepareRun() {
+        try {
+            jsEnv.initVMAPI();
+            jsEnv.loadBundledScript();
+        } catch (IOException e) {
+            throwVMException(e);
+        }
+    }
+
+    /**
+     * Start the emulation process on this thread with specified source.
      * <br/>
      * This method blocks and return when requested or the VM stops.
      */
-    public void start() {
-        // Enable natives
-        Modular.autoRegister();
-
-        // Load necessary scripts
-        System.out.println("Loading scripts.");
-        String entry = Cfg.getValue("emulation.entry", "main");
-
-        // Init VM
-        jsEnv.initVMAPI();
-
-        // Load scripts
-        try {
-            System.out.println("Loading bundled preload script.");
-            jsEnv.loadBundledScript();
-            System.out.println("Loading entry: " + entry);
-            jsEnv.loadScriptAsync(entry);
-        } catch (IOException e) {
-            throw new EmulationVMException("failed to load vm scripts", e);
-        }
-
-        // Start the vm loop
+    public void start(String src) {
+        jsEnv.pushScript(src);
         jsEnv.start();
+    }
+
+    /**
+     * Start the emulation process on a new thread with specified source.
+     * <br/>
+     * This method returns immediately.
+     */
+    public void startAsync(String src) {
+        new Thread(() -> {
+            start(src);
+        }).start();
+    }
+
+    protected void throwVMException(Throwable e) {
+        throw new EmulationVMException("failed to load vm scripts", e);
     }
 
     public static class EmulationVMException extends RuntimeException {
