@@ -101,7 +101,7 @@ public class ScriptEnv {
     /**
      * Gets the internal loop object.
      */
-    protected Loop getLoop() {
+    public Loop getLoop() {
         return vmLoop;
     }
 

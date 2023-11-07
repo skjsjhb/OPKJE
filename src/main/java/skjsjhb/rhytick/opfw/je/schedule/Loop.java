@@ -28,9 +28,16 @@ public class Loop {
     protected RunningFlag running = new RunningFlag();
 
     /**
+     * Construct a loop.
+     */
+    public Loop() {
+        makeCurrent(Thread.currentThread());
+    }
+
+    /**
      * Check if this method is called on the same thread where the loop is created.
      */
-    protected void checkThread() {
+    protected synchronized void checkThread() {
         if (homeThreadId != Thread.currentThread().threadId()) {
             throw new IllegalStateException("not calling from the home thread");
         }
@@ -58,6 +65,17 @@ public class Loop {
                 t.execute();
             }
         }
+    }
+
+    /**
+     * Transfer this loop to a thread, making it its home thread.
+     * <br/>
+     * Transferring thread is dangerous when the loop is running. Also, it breaks the rule of 'one-thread' if
+     * used improperly. Unless starting the loop on another thread, or under certain scenarios, this method
+     * should not be called.
+     */
+    public synchronized void makeCurrent(Thread t) {
+        homeThreadId = t.threadId();
     }
 
     /**
@@ -92,14 +110,49 @@ public class Loop {
     }
 
     /**
+     * Similar to {@link #runOnce()}, but returns after all tasks are polled.
+     */
+    public synchronized void runAll() {
+        if (running.isRunning()) {
+            throw new IllegalStateException("loop is running");
+        }
+        checkThread();
+        running.setRunning(true);
+        Task t;
+        while ((t = tasks.poll()) != null) {
+            t.execute();
+        }
+        running.setRunning(false);
+    }
+
+    /**
+     * Run the loop once synchronizied, temporarily setting running to true.
+     * <br/>
+     * This method can only be called from the main thread.
+     */
+    public synchronized void runOnce() {
+        if (running.isRunning()) {
+            throw new IllegalStateException("loop is running");
+        }
+        checkThread();
+        running.setRunning(true);
+        Task t = tasks.poll();
+        if (t != null) {
+            t.execute();
+        }
+        running.setRunning(false);
+    }
+
+    /**
      * Start the loop. This method will block the thread until the loop ends.
      */
     public void start() {
-        if (isRunning()) {
-            throw new IllegalStateException("loop is already running");
+        synchronized (this) {
+            if (isRunning()) {
+                throw new IllegalStateException("loop is already running");
+            }
+            running.setRunning(true);
         }
-        homeThreadId = Thread.currentThread().threadId();
-        running.setRunning(true);
         loop();
     }
 

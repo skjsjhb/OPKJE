@@ -155,7 +155,6 @@ distributions {
 }
 
 tasks.startScripts {
-
     doLast {
         // Some hacks to set the module path
         var windowsContent = windowsScript.readText()
@@ -171,6 +170,7 @@ tasks.startScripts {
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs(appArgs)
 }
 
 tasks.withType<Jar> {
