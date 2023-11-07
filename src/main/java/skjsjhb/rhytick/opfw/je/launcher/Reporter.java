@@ -35,7 +35,7 @@ public final class Reporter {
                                                 
                         %s
 
-                        You're seeing this prompt as we need to raise your attention.
+                        You're seeing this prompt as an error has just happened.
                         Consider reporting it to Team Rhytick for future fixes.
                         We apologize for the incovenience.
                                                 

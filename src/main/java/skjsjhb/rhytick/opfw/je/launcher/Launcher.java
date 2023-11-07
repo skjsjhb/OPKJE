@@ -3,6 +3,7 @@ package skjsjhb.rhytick.opfw.je.launcher;
 import skjsjhb.rhytick.opfw.je.dce.Codeload;
 import skjsjhb.rhytick.opfw.je.dce.Emulation;
 import skjsjhb.rhytick.opfw.je.dce.Modular;
+import skjsjhb.rhytick.opfw.je.dce.WorkerFactory;
 import skjsjhb.rhytick.opfw.je.finder.Finder;
 import skjsjhb.rhytick.opfw.je.finder.KV;
 
@@ -14,7 +15,7 @@ import java.io.IOException;
  * This launcher starts all services, call the main script entry and maintain all necessary envs.
  */
 public final class Launcher {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // Set UI LAF for message displaying
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -22,24 +23,24 @@ public final class Launcher {
                  IllegalAccessException e) {
             System.out.println("Could not initialize UI look and feel: " + e);
         }
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            Reporter.reportError(e, "The application cannot continue due to this failure.");
+            System.exit(1);
+        });
         System.out.println("Preparing for launch...");
         prepareLaunch();
         System.out.println("This is OPKJE, JVM edition of the OPK compatibility layer.");
         System.out.println("OPKJE is part of the OPFW Series.");
-        try {
-            Emulation me = new Emulation();
-            me.prepareRun();
-            String mainEntry = Cfg.getValue("emulation.entry", "/opt/main.js");
-            me.start(Codeload.readScriptSource(mainEntry));
-        } catch (Emulation.EmulationVMException | IOException e) {
-            Reporter.reportError(e, "VM is required for code evaluation.\nThe application cannot continue.");
-            System.exit(1);
-        }
+        Emulation me = new Emulation();
+        me.prepareRun();
+        String mainEntry = Cfg.getValue("emulation.entry", "/opt/main.js");
+        me.start(Codeload.readScriptSource(mainEntry));
         prepareExit();
     }
 
     private static void prepareExit() {
         System.out.println("Stopping!");
+        WorkerFactory.stopAll();
         KV.save();
     }
 

@@ -183,12 +183,13 @@ public class ScriptEnv {
     /**
      * Start the engine on current thread.
      * <br/>
-     * This method blocks until the VM loop stops.
+     * This method blocks until the VM loop stops. After the VM exits, it's automatically closed.
      */
     public void start() {
         vm.enter();
         System.out.printf("[ScriptEnv #%d Started]\n", id);
         vmLoop.start();
+        System.out.printf("[ScriptEnv #%d Stopped]\n", id);
         vm.leave();
         vm.close();
     }
@@ -197,7 +198,6 @@ public class ScriptEnv {
      * Stop the loop and the engine.
      */
     public void stop() {
-        System.out.printf("[ScriptEnv #%d Stopped]\n", id);
         vmLoop.requestStop();
     }
 }

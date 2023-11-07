@@ -35,6 +35,22 @@ public final class Util {
     }
 
     /**
+     * Sleep current thread.
+     * <br/>
+     * This method entirely blocks current thread, preventing any tasks in event queue from being processed.
+     * Unless for testing or certain purpose, this method should not be called.
+     */
+    @Expose
+    @SuppressWarnings("unused")
+    public static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {
+
+        }
+    }
+
+    /**
      * Wraps a Java array.
      * <br/>
      * The param is claimed to be of type {@link Object}, to be compatible with GraalVM types. However, the

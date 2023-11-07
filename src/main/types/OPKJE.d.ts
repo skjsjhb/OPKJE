@@ -16,9 +16,10 @@ type KnownRequireTypeMap<T> =
                 T extends "finder" ? Finder :
                     T extends "transformer" ? Transformer :
                         T extends "util" ? Util :
-                            never;
+                            T extends "workers" ? Workers :
+                                never;
 
-type KnownRequireNames = "version" | "kv" | "timer" | "finder" | "transformer" | "util";
+type KnownRequireNames = "version" | "kv" | "timer" | "finder" | "transformer" | "util" | "workers";
 
 declare interface VM {
     getVMInfo(): string;
@@ -51,6 +52,12 @@ declare interface Timer {
     getHighResTime(): number;
 }
 
+declare interface Workers {
+    createWorker(source: string): number;
+
+    stopWorker(id: number): void;
+}
+
 declare interface TimerFactory {
     newTimer(): Timer;
 }
@@ -65,6 +72,8 @@ declare interface Util {
     decodeString(a: Uint8Array): string;
 
     encodeString(a: string): Uint8Array;
+
+    sleep(millis: number): void;
 
     toArray(a: any /* T[] */): any[];
 }

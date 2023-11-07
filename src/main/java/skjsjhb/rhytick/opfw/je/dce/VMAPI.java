@@ -9,6 +9,8 @@ import java.io.IOException;
 /**
  * DCE interface for guest script to schedule tasks.
  * This interface is special and is registered internally, without using auto registration.
+ * Each emulation context owns its dedicated VMAPI implementation, not shared with other VMs. This dedicated API
+ * fully controls the current VM.
  */
 public class VMAPI {
     protected ScriptEnv env;

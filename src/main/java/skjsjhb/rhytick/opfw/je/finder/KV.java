@@ -76,10 +76,16 @@ public final class KV {
 
     /**
      * Set an object in this KV.
+     *
+     * @param v Value to be set. If {@code null}, the key will be cleared.
      */
     @Expose
     @SuppressWarnings("unused")
-    public static void set(String k, String v) {
-        kv.put(k, v);
+    public static void set(String k, @Nullable String v) {
+        if (v == null) {
+            kv.remove(k);
+        } else {
+            kv.put(k, v);
+        }
     }
 }

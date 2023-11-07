@@ -4,6 +4,8 @@ import java.io.IOException;
 
 /**
  * Refers to the Opticia main script.
+ * <br/>
+ * The Emulation contains information for monitoring a running script env and syncing states.
  */
 public class Emulation {
     protected ScriptEnv jsEnv;
@@ -14,22 +16,22 @@ public class Emulation {
     }
 
     /**
-     * Get the ID of the underlying env id.
+     * Get the underlying script env.
      */
-    public int getEnvID() {
-        return jsEnv.getID();
+    public ScriptEnv getEnv() {
+        return jsEnv;
     }
-
 
     /**
      * Prepare for the run of the code.
      */
     public void prepareRun() {
+        jsEnv.initVMAPI();
         try {
-            jsEnv.initVMAPI();
             jsEnv.loadBundledScript();
         } catch (IOException e) {
-            throwVMException(e);
+            System.err.println("Could not load preload script: " + e);
+            System.err.println("This will likely to cause subsequent errors.");
         }
     }
 
@@ -52,19 +54,5 @@ public class Emulation {
         new Thread(() -> {
             start(src);
         }).start();
-    }
-
-    protected void throwVMException(Throwable e) {
-        throw new EmulationVMException("failed to load vm scripts", e);
-    }
-
-    public static class EmulationVMException extends RuntimeException {
-        public EmulationVMException(String what) {
-            super(what);
-        }
-
-        public EmulationVMException(String what, Throwable cause) {
-            super(what, cause);
-        }
     }
 }
