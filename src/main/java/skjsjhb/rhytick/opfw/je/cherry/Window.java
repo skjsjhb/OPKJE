@@ -60,7 +60,7 @@ public class Window {
         long monitor = GLFW.glfwGetPrimaryMonitor();
         GLFWVidMode vmode = GLFW.glfwGetVideoMode(monitor);
         if (vmode == null) {
-            throw new CherryRuntimeException("could not get default video mode");
+            throw new RuntimeException("could not get default video mode");
         }
 
         int ww = vmode.width();
@@ -86,7 +86,7 @@ public class Window {
                     MemoryUtil.NULL, MemoryUtil.NULL);
         }
         if (gWindow == MemoryUtil.NULL) {
-            throw new CherryRuntimeException("failed to create window");
+            throw new RuntimeException("failed to create window");
         }
 
         GLFW.glfwMakeContextCurrent(gWindow);

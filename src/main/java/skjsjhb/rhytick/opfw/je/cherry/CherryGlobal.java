@@ -48,7 +48,7 @@ public class CherryGlobal extends ServiceTask {
         System.out.println("Initializing native GLFW library.");
         GLFWErrorCallback.createPrint(System.err).set();
         if (!GLFW.glfwInit()) {
-            throw new CherryRuntimeException("failed to initialize GLFW");
+            throw new RuntimeException("failed to initialize GLFW");
         }
         irqMax = Cfg.getInt("cherry.irq_max", 2048);
         System.out.println("IRQ limit set to " + irqMax);
