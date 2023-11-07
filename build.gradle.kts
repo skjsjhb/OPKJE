@@ -1,13 +1,13 @@
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.util.regex.Matcher
 
 plugins {
     java
     application
+    distribution
 }
 
 group = "skjsjhb.rhytick.opfw"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_20
@@ -17,7 +17,7 @@ java {
 val graalVMVersion = "23.1.0"
 val lwjglVersion = "3.3.3"
 val jomlVersion = "1.10.5"
-
+var isWindows = System.getProperty("os.name").startsWith("Windows")
 // Detect platform and get natives
 val lwjglNatives = Pair(
         System.getProperty("os.name")!!,
@@ -109,7 +109,7 @@ dependencies {
 
     // GraalVM
     implementation("org.graalvm.polyglot", "polyglot", graalVMVersion)
-    implementation("org.graalvm.polyglot", "js", graalVMVersion)
+    implementation("org.graalvm.polyglot", "js-community", graalVMVersion)
 
     // Dev
     implementation("com.google.code.findbugs", "jsr305", "3.0.0")
@@ -123,33 +123,58 @@ dependencies {
 }
 
 
-val isGraalVM = Files.exists(Paths.get("${System.getProperty("java.home")}/lib/graalvm"))
 
-val jvmCommonArgs = listOf("-Dfile.encoding=UTF-8")
 
-val devArgs = listOf("-ea")
-
-val graalVMArgs: List<String> = if (isGraalVM) {
-    listOf()
-} else {
-    configurations {
-        create("compilerClasspath") {
-            isCanBeResolved = true
-        }
+configurations {
+    create("compilerClasspath") {
+        isCanBeResolved = true
     }
-    dependencies {
-        "compilerClasspath"("org.graalvm.compiler:compiler:$graalVMVersion")
-    }
-    val compilerDependencies = configurations.getByName("compilerClasspath")
-            .filter { it.name.endsWith(".jar") }
-    listOf("-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "--upgrade-module-path=${compilerDependencies.asPath}")
 }
+dependencies {
+    "compilerClasspath"("org.graalvm.compiler:compiler:$graalVMVersion")
+}
+val compilerDependencies = configurations.getByName("compilerClasspath")
+        .filter { it.name.endsWith(".jar") }
+
+val appArgs = listOf("-Dfile.encoding=UTF-8", "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+EnableJVMCI", "--upgrade-module-path=${compilerDependencies.asPath}")
+
 
 application {
     mainClass.set("skjsjhb.rhytick.opfw.je.launcher.Launcher")
-    applicationDefaultJvmArgs = jvmCommonArgs + graalVMArgs + devArgs
+    applicationDefaultJvmArgs = appArgs
+}
+
+
+distributions {
+    main {
+        contents {
+            from(compilerDependencies)
+        }
+    }
+}
+
+tasks.startScripts {
+
+    doLast {
+        // Some hacks to set the module path
+        var windowsContent = windowsScript.readText()
+        windowsContent = windowsContent.replaceFirst(Regex("\"--upgrade-module-path\\=[^\"]*\""), "\"--upgrade-module-path=%APP_HOME%\"")
+        windowsScript.writeText(windowsContent)
+
+        var unixContent = unixScript.readText()
+        unixContent = unixContent.replaceFirst(Regex("\"--upgrade-module-path\\=[^\"]*\"'"),
+                Matcher.quoteReplacement("';DEFAULT_JVM_OPTS+=\"\\\"--upgrade-module-path=\$APP_HOME\\\"\""))
+        unixScript.writeText(unixContent)
+    }
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "skjsjhb.rhytick.opfw.je.launcher.Launcher"
+    }
 }
