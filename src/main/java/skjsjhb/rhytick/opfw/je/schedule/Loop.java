@@ -1,7 +1,9 @@
 package skjsjhb.rhytick.opfw.je.schedule;
 
+import javax.annotation.Nullable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Loops process micro non-blocking tasks synchronizingly.
@@ -12,10 +14,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Once a loop has stopped, it cannot be re-used (i.e. start again). Resource leak might happen if doing so.
  */
 public class Loop {
+
     /**
      * Tasks buffer.
      */
-    protected final Queue<Task> tasks = new ConcurrentLinkedQueue<>();
+    protected final WrappedQueue tasks = new WrappedQueue();
 
     /**
      * The thread this loop belongs.
@@ -49,7 +52,15 @@ public class Loop {
      * This method can be called from any thread.
      */
     public int getQueueLength() {
-        return tasks.size();
+        return tasks.get().size();
+    }
+
+    /**
+     * Gets the thread this loop runs on.
+     */
+    @Nullable
+    public Thread getThread() {
+        return homeThread;
     }
 
     /**
@@ -69,8 +80,8 @@ public class Loop {
      */
     protected void loop() {
         while (running.isRunning()) {
-            Task t = tasks.poll();
-            if (t != null) {
+            Task t;
+            while ((t = tasks.get().poll()) != null) {
                 t.execute();
             }
         }
@@ -95,7 +106,7 @@ public class Loop {
      * @param a Task to add.
      */
     public void push(Task a) {
-        tasks.add(a);
+        tasks.get().add(a);
         a.setLoop(this);
     }
 
@@ -129,7 +140,7 @@ public class Loop {
         }
         checkThread();
         running.setRunning(true);
-        Task t = tasks.poll();
+        Task t = tasks.get().poll();
         if (t != null) {
             t.execute();
         }
@@ -160,7 +171,8 @@ public class Loop {
             return; // Fails silently
         }
         requestStop();
-        tasks.clear();
+        tasks.get().clear();
+        tasks.lock();
     }
 
     /**
@@ -175,6 +187,26 @@ public class Loop {
 
         public synchronized void setRunning(boolean ar) {
             running = ar;
+        }
+    }
+
+    protected static final class WrappedQueue {
+        private final Queue<Task> emptyQueue = new ConcurrentLinkedQueue<>();
+
+        private final AtomicBoolean locked = new AtomicBoolean(false);
+
+        private final Queue<Task> queue = new ConcurrentLinkedQueue<>();
+
+        public Queue<Task> get() {
+            if (locked.get()) {
+                emptyQueue.clear();
+                return emptyQueue;
+            }
+            return queue;
+        }
+
+        public void lock() {
+            locked.set(true);
         }
     }
 }

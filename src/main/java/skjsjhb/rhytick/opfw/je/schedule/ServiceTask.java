@@ -3,7 +3,8 @@ package skjsjhb.rhytick.opfw.je.schedule;
 
 /**
  * A task implementation which executes initial method, runs always method until it returns false, and
- * then executes stop method.
+ * then executes stop method. A service automatically stops itself when the loop is about to exit, regardless
+ * of the return value of the executor.
  */
 public abstract class ServiceTask extends AlwaysTask {
 
@@ -28,6 +29,7 @@ public abstract class ServiceTask extends AlwaysTask {
             if (getLoop().isRunning()) {
                 initial();
                 status = ServiceStatus.ALWAYS;
+                getLoop().push(this);
             }
         } else if (status == ServiceStatus.ALWAYS) {
             if (always() && getLoop().isRunning()) {

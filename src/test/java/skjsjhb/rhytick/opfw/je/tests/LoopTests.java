@@ -1,19 +1,16 @@
 package skjsjhb.rhytick.opfw.je.tests;
 
 import org.junit.jupiter.api.*;
-import skjsjhb.rhytick.opfw.je.schedule.AlwaysTask;
-import skjsjhb.rhytick.opfw.je.schedule.Loop;
-import skjsjhb.rhytick.opfw.je.schedule.Scheduler;
-import skjsjhb.rhytick.opfw.je.schedule.Task;
+import skjsjhb.rhytick.opfw.je.schedule.*;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Loop and Scheduler")
 @Timeout(5)
@@ -24,6 +21,24 @@ public class LoopTests {
     void init() {
         loop = new Loop();
         loop.makeCurrent(Thread.currentThread());
+    }
+
+    @Test
+    @DisplayName("Execution of Always Task")
+    void testAlwaysTask() {
+        AtomicBoolean b = new AtomicBoolean(false);
+        AlwaysTask t = new AlwaysTask() {
+            @Override
+            public boolean always() {
+                b.set(true);
+                return false;
+            }
+        };
+        loop.push(t);
+        while (loop.getQueueLength() > 0) {
+            loop.runOnce();
+        }
+        assertTrue(b.get());
     }
 
     @Test
@@ -65,6 +80,38 @@ public class LoopTests {
             assertInstanceOf(IllegalStateException.class, e.getCause());
         }
         es.close();
+    }
+
+    @Test
+    @DisplayName("Execution of Service Task")
+    void testServiceTask() {
+        AtomicBoolean initTouched = new AtomicBoolean(false);
+        AtomicBoolean alwaysTouched = new AtomicBoolean(false);
+        AtomicBoolean stopTouched = new AtomicBoolean(false);
+        var t = new ServiceTask() {
+            @Override
+            public boolean always() {
+                alwaysTouched.set(true);
+                return false;
+            }
+
+            @Override
+            public void initial() {
+                initTouched.set(true);
+            }
+
+            @Override
+            public void stop() {
+                stopTouched.set(true);
+            }
+        };
+        loop.push(t);
+        while (loop.getQueueLength() > 0) {
+            loop.runOnce();
+        }
+        assertTrue(initTouched.get());
+        assertTrue(alwaysTouched.get());
+        assertTrue(stopTouched.get());
     }
 
     @RepeatedTest(value = 8, name = Values.REPEAT_TEST_TITLE)
