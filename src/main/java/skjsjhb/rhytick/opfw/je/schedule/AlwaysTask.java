@@ -17,7 +17,7 @@ public abstract class AlwaysTask extends Task {
     public abstract boolean always();
 
     @Override
-    void execute() {
+    public void execute() {
         if (always() && getLoop() != null && getLoop().isRunning()) {
             getLoop().push(this);
         }

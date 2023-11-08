@@ -22,7 +22,7 @@ public abstract class Task {
     /**
      * Task executor.
      */
-    abstract void execute();
+    public abstract void execute();
 
     /**
      * Gets the parent loop of this task.

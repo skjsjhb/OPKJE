@@ -1,5 +1,6 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 
 /**
@@ -8,6 +9,8 @@ import java.io.IOException;
  * The Emulation contains information for monitoring a running script env and syncing states.
  */
 public class Emulation {
+    protected Thread hostThread;
+
     protected ScriptEnv jsEnv;
 
     public Emulation() {
@@ -20,6 +23,14 @@ public class Emulation {
      */
     public ScriptEnv getEnv() {
         return jsEnv;
+    }
+
+    /**
+     * Gets the thread this env is running on, or the last thread ran on.
+     */
+    @Nullable
+    public Thread getThread() {
+        return hostThread;
     }
 
     /**
@@ -41,6 +52,7 @@ public class Emulation {
      * This method blocks and return when requested or the VM stops.
      */
     public void start(String src) {
+        hostThread = Thread.currentThread();
         jsEnv.pushScript(src);
         jsEnv.start();
     }
@@ -51,8 +63,9 @@ public class Emulation {
      * This method returns immediately.
      */
     public void startAsync(String src) {
-        new Thread(() -> {
+        Thread t = new Thread(() -> {
             start(src);
-        }).start();
+        });
+        t.start();
     }
 }

@@ -1,5 +1,6 @@
 package skjsjhb.rhytick.opfw.je.dce;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,6 +45,14 @@ public final class WorkerFactory {
     }
 
     /**
+     * Gets the worker instance.
+     */
+    @Nullable
+    public static Emulation getWorker(int id) {
+        return WORKERS_RECORD.get(id);
+    }
+
+    /**
      * Check and stop running workers.
      * <br/>
      * This method is only considered a fallback way to close workers which <b>should have been</b> closed. The
@@ -56,7 +65,7 @@ public final class WorkerFactory {
         int c = 0;
         for (Emulation e : WORKERS_RECORD.values()) {
             if (e.getEnv().getLoop().isRunning()) {
-                e.getEnv().stop(); // Stop immediately
+                e.getEnv().getLoop().stop(); // Stop immediately
                 c++;
             }
         }
@@ -82,7 +91,7 @@ public final class WorkerFactory {
     @SuppressWarnings("unused")
     public static void stopWorker(int id) {
         if (WORKERS_RECORD.containsKey(id)) {
-            WORKERS_RECORD.get(id).getEnv().stop();
+            WORKERS_RECORD.get(id).getEnv().getLoop().requestStop();
         }
     }
 }

@@ -20,7 +20,7 @@ public class Loop {
     /**
      * The thread this loop belongs.
      */
-    protected long homeThreadId;
+    protected Thread homeThread;
 
     /**
      * Running flag.
@@ -38,9 +38,18 @@ public class Loop {
      * Check if this method is called on the same thread where the loop is created.
      */
     protected synchronized void checkThread() {
-        if (homeThreadId != Thread.currentThread().threadId()) {
+        if (homeThread.threadId() != Thread.currentThread().threadId()) {
             throw new IllegalStateException("not calling from the home thread");
         }
+    }
+
+    /**
+     * Get the length of queued tasks.
+     * <br/>
+     * This method can be called from any thread.
+     */
+    public int getQueueLength() {
+        return tasks.size();
     }
 
     /**
@@ -48,7 +57,7 @@ public class Loop {
      * <br/>
      * This method may be called from any thread.
      */
-    public synchronized boolean isRunning() {
+    public boolean isRunning() {
         return running.isRunning();
     }
 
@@ -75,7 +84,7 @@ public class Loop {
      * should not be called.
      */
     public synchronized void makeCurrent(Thread t) {
-        homeThreadId = t.threadId();
+        homeThread = t;
     }
 
     /**
@@ -110,27 +119,11 @@ public class Loop {
     }
 
     /**
-     * Similar to {@link #runOnce()}, but returns after all tasks are polled.
-     */
-    public synchronized void runAll() {
-        if (running.isRunning()) {
-            throw new IllegalStateException("loop is running");
-        }
-        checkThread();
-        running.setRunning(true);
-        Task t;
-        while ((t = tasks.poll()) != null) {
-            t.execute();
-        }
-        running.setRunning(false);
-    }
-
-    /**
      * Run the loop once synchronizied, temporarily setting running to true.
      * <br/>
      * This method can only be called from the main thread.
      */
-    public synchronized void runOnce() {
+    public void runOnce() {
         if (running.isRunning()) {
             throw new IllegalStateException("loop is running");
         }
@@ -151,6 +144,7 @@ public class Loop {
             if (isRunning()) {
                 throw new IllegalStateException("loop is already running");
             }
+            checkThread();
             running.setRunning(true);
         }
         loop();

@@ -14,9 +14,12 @@ public final class Scheduler {
      * The thread will be destroyed once the {@link Runnable} returns. No value will be returned.
      *
      * @param a {@link Runnable} object to be run on the thread.
+     * @return The created thread.
      */
-    public static void runOnWorkerThread(Runnable a) {
-        new Thread(a).start();
+    public static Thread runOnNewThread(Runnable a) {
+        var th = new Thread(a);
+        th.start();
+        return th;
     }
 
     /**
@@ -28,8 +31,11 @@ public final class Scheduler {
      *
      * @param a  {@link Supplier} object to be run on the thread.
      * @param cb Callback accepting the return value.
+     * @return The created thread.
      */
-    public static void runOnWorkerThread(Supplier<Object> a, Consumer<Object> cb) {
-        new Thread(() -> cb.accept(a.get())).start();
+    public static <T> Thread runOnNewThread(Supplier<T> a, Consumer<T> cb) {
+        var th = new Thread(() -> cb.accept(a.get()));
+        th.start();
+        return th;
     }
 }

@@ -85,12 +85,10 @@ public class VMAPI {
 
     /**
      * Stop the VM.
-     * <br/>
-     * This will stop the VM immediately, without waiting for resting tasks.
      */
     @Expose
     @SuppressWarnings("unused")
     public void stop() {
-        env.stop();
+        env.getLoop().requestStop();
     }
 }

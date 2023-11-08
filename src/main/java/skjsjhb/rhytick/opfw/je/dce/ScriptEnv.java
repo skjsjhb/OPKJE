@@ -188,16 +188,10 @@ public class ScriptEnv {
     public void start() {
         vm.enter();
         System.out.printf("[ScriptEnv #%d Started]\n", id);
+        vmLoop.makeCurrent(Thread.currentThread());
         vmLoop.start();
         System.out.printf("[ScriptEnv #%d Stopped]\n", id);
         vm.leave();
         vm.close();
-    }
-
-    /**
-     * Stop the loop and the engine.
-     */
-    public void stop() {
-        vmLoop.requestStop();
     }
 }
